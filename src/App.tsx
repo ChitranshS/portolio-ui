@@ -105,7 +105,7 @@ function App() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 pl-0 lg:pl-64">
+      <div className="flex-1 pl-0">
         <div className="relative h-full">
           <div className="absolute top-4 right-4 z-40">
             <ProfileDropdown />
