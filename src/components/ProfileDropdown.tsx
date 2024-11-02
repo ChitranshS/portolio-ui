@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Settings, Users, Zap, LogOut } from 'lucide-react';
+import { User,FileDown, Github, Info, Twitter, Linkedin } from 'lucide-react';
 
 interface ProfileDropdownProps {}
 
@@ -8,6 +8,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -19,11 +20,11 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = () => {
   }, []);
 
   const menuItems = [
-    { icon: <Users size={18} />, label: 'My GPTs' },
-    { icon: <Settings size={18} />, label: 'Customize ChatGPT' },
-    { icon: <Settings size={18} />, label: 'Settings' },
-    { icon: <Zap size={18} />, label: 'Renew Plus' },
-    { icon: <LogOut size={18} />, label: 'Log out' },
+    { icon: <FileDown size={18} />, label: 'Download Resume' },
+    { icon: <Github size={18} />, label: 'Github' },
+    { icon: <Linkedin size={18} />, label: 'LinkedIn' },
+    { icon: <Twitter size={18} />, label: 'Twitter' },
+    { icon: <Info size={18} />, label: 'Info' },
   ];
 
   return (

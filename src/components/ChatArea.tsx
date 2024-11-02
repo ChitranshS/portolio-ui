@@ -32,23 +32,28 @@ interface ChatAreaProps {
 const QuickPrompts = [
   { 
     icon: <Image size={20} />, 
-    text: "Create image", 
-    description: "Generate and edit images" 
+    text: "Work Experience", 
+    description: "Professional background and roles" 
   },
   { 
     icon: <Code size={20} />, 
-    text: "Write code", 
-    description: "Get coding help" 
+    text: "Skills & Expertise", 
+    description: "Technical and soft skills" 
   },
   { 
     icon: <Eye size={20} />, 
-    text: "Analyze images", 
-    description: "Understand images" 
+    text: "Technical Projects", 
+    description: "View my coding projects and implementations" 
   },
   { 
     icon: <Lightbulb size={20} />, 
-    text: "Brainstorm", 
-    description: "Generate ideas" 
+    text: "GitHub Portfolio", 
+    description: "Browse my code repositories" 
+  },
+  { 
+    icon: <Lightbulb size={20} />, 
+    text: "Education", 
+    description: "Academic background and skills" 
   },
 ];
 
@@ -71,21 +76,24 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    e.stopPropagation(); // Prevent event bubbling
     
     const messageText = message.trim();
-    setMessage('');
-
+    if (!messageText || isLoading) return;
+    
+    setMessage(''); // Clear input immediately
+  
     if (!currentChat) {
       createNewChat(messageText);
     } else {
       onSendMessage(messageText);
     }
   };
-
+  
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation(); // Prevent event bubbling
       handleSubmit(e as any);
     }
   };
@@ -110,9 +118,12 @@ const Logo = () => (
   const EmptyState = () => (
     <div className="h-full flex flex-col items-center justify-center px-4">
       <Logo/>
-      <h1 className="text-2xl font-semibold text-gray-300 mb-8">
+      <h1 className="text-2xl font-semibold text-gray-300 mb-2">
         How can I help you today?
       </h1>
+      <h3 className="text-md text-gray-500 mb-8">
+      Ask me anything about <span className="font-semibold text-gray-400">Chitransh's </span> professional background and projects
+      </h3>
       <div className="w-full max-w-2xl">
         <div className="relative mb-8">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
@@ -126,7 +137,7 @@ const Logo = () => (
             autoFocus
           />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {QuickPrompts.map((prompt, idx) => (
             <button
               key={idx}

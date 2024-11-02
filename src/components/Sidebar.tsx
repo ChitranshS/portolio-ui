@@ -19,11 +19,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   onNewChat
 }) => {
   return (
-    <div className="flex flex-col h-full bg-[#1E1E1E] border-r border-[#2A2A2A]">
-      <div className="p-4 border-b border-[#2A2A2A]">
+    <div className="flex flex-col h-full bg-[#2A2A2A] border-r-2 border-[#2A2A2A]">
+      <div className="p-4 border-b-2 border-[#2A2A2A]">
         <Button
           variant="ghost"
-          className="w-full gap-2 hover:bg-[#2A2A2A] text-gray-300 hover:text-white transition-colors"
+          className="w-full gap-2 bg-[#1e1e1e] hover:bg-[#1e1e1e] text-gray-300 hover:text-white transition-colors"
           onClick={onNewChat}  
         >
           <PlusCircle className="h-4 w-4" />
@@ -31,17 +31,17 @@ const Sidebar: React.FC<SidebarProps> = ({
         </Button>
       </div>
       <ScrollArea className="flex-1 px-2">
-        <div className="space-y-1 py-2">
+        <div className="space-y-1  bg-[#1e1e1e] rounded-lg">
           {chats.map((chat) => (
             <button
               key={chat.id}
               onClick={() => setCurrentChat(chat)}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
+                "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ",
                 "text-gray-400 hover:text-gray-200",
-                "hover:bg-[#2A2A2A]",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4A4A4A]",
-                currentChat?.id === chat.id && "bg-[#2A2A2A] text-white"
+                " hover:bg-[#1e1e1e]",
+                // "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4A4A4A]",
+                currentChat?.id === chat.id && "bg-[#1d2021] text-white"
               )}
             >
               <MessageCircle className="h-4 w-4 shrink-0 opacity-70" />
