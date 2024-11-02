@@ -19,7 +19,7 @@ import { Chat } from '../types';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+import { chatStorage } from '@/lib/chatStorage';
 import { cn } from "@/lib/utils";
 
 interface ChatAreaProps {
@@ -66,6 +66,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Save chat to localStorage whenever it changes
+  useEffect(() => {
+    if (currentChat) {
+      chatStorage.saveChat(currentChat);
+    }
+  }, [currentChat]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -76,24 +83,26 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     
     const messageText = message.trim();
     if (!messageText || isLoading) return;
     
-    setMessage(''); // Clear input immediately
-  
+    setMessage('');
+    
     if (!currentChat) {
       createNewChat(messageText);
     } else {
       onSendMessage(messageText);
+      // Add message to storage
+      chatStorage.addMessage(currentChat.id, messageText, 'user');
     }
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      e.stopPropagation(); // Prevent event bubbling
+      e.stopPropagation();
       handleSubmit(e as any);
     }
   };
@@ -106,23 +115,24 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-const Logo = () => (
-  <div className="mb-4 flex flex-col items-center ">
-  <Avatar className="w-16 h-16 mb-4  flex items-center justify-center">
-    <AvatarImage src="/logo.jpg" className="w-full h-full animate-rotate " />
-    <AvatarFallback>CG</AvatarFallback>
-  </Avatar>
-  <span className="text-3xl font-bold">ChitsGPT</span>
-</div>
-);
+  const Logo = () => (
+    <div className="mb-4 flex flex-col items-center">
+      <Avatar className="w-16 h-16 mb-4 flex items-center justify-center">
+        <AvatarImage src="/logo.jpg" className="w-full h-full animate-rotate" />
+        <AvatarFallback>CG</AvatarFallback>
+      </Avatar>
+      <span className="text-3xl font-bold">ChitsGPT</span>
+    </div>
+  );
+
   const EmptyState = () => (
     <div className="h-full flex flex-col items-center justify-center px-4">
-      <Logo/>
+      <Logo />
       <h1 className="text-2xl font-semibold text-gray-300 mb-2">
         How can I help you today?
       </h1>
       <h3 className="text-md text-gray-500 mb-8">
-      Ask me anything about <span className="font-semibold text-gray-400">Chitransh's </span> professional background and projects
+        Ask me anything about <span className="font-semibold text-gray-400">Chitransh's </span> professional background and projects
       </h3>
       <div className="w-full max-w-2xl">
         <div className="relative mb-8">
@@ -155,8 +165,6 @@ const Logo = () => (
       </div>
     </div>
   );
-
-  const shouldShowChat = currentChat && Array.isArray(currentChat.messages) && currentChat.messages.length > 0;
 
   return (
     <div className="flex flex-col h-screen pt-16 pl-64 mr-64 bg-[#1E1E1E] animate-fade-in animation-delay-500">

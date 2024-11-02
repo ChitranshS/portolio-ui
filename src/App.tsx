@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+// src/App.tsx
+
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ProfileDropdown from './components/ProfileDropdown';
 import { PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Chat, Message, MessageRole } from './types';
 import ProfileModal from './components/ProfileModal';
+import { chatStorage } from './lib/chatStorage';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -13,6 +16,15 @@ function App() {
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Load saved chats on initial render
+  useEffect(() => {
+    const savedChats = chatStorage.getChats();
+    if (savedChats.length > 0) {
+      setChats(savedChats);
+      setCurrentChat(savedChats[0]); // Set most recent chat as current
+    }
+  }, []);
+
   const createNewChat = (initialMessage?: string) => {
     const newChat: Chat = {
       id: Date.now(),
@@ -20,7 +32,11 @@ function App() {
       messages: []
     };
     
-    setChats(prevChats => [newChat, ...prevChats]);
+    setChats(prevChats => {
+      const updatedChats = [newChat, ...prevChats];
+      chatStorage.saveChat(newChat);
+      return updatedChats;
+    });
     setCurrentChat(newChat);
 
     if (initialMessage) {
@@ -33,34 +49,35 @@ function App() {
     setIsLoading(true);
 
     try {
-      // Use provided chat or current chat or create new one
       const activeChat = chatToUse || currentChat || {
         id: Date.now(),
         title: message,
         messages: [],
       };
 
-      // Create user message
       const userMessage: Message = {
         content: message,
         role: 'user' as MessageRole,
         timestamp: new Date().toISOString()
       };
 
-      // Create updated chat with user message
       const updatedChat: Chat = {
         ...activeChat,
         title: activeChat.messages.length === 0 ? message : activeChat.title,
         messages: [...(activeChat.messages || []), userMessage]
       };
 
-      // Update state immediately with user message
       setChats(prevChats => {
         const chatExists = prevChats.some(c => c.id === updatedChat.id);
         if (chatExists) {
-          return prevChats.map(c => c.id === updatedChat.id ? updatedChat : c);
+          const filteredChats = prevChats.filter(c => c.id !== updatedChat.id);
+          const newChats = [updatedChat, ...filteredChats];
+          chatStorage.saveChat(updatedChat);
+          return newChats;
         } else {
-          return [updatedChat, ...prevChats];
+          const newChats = [updatedChat, ...prevChats];
+          chatStorage.saveChat(updatedChat);
+          return newChats;
         }
       });
       setCurrentChat(updatedChat);
@@ -68,29 +85,38 @@ function App() {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Create assistant message
       const assistantMessage: Message = {
         content: message, // Echo for demo
         role: 'assistant' as MessageRole,
         timestamp: new Date().toISOString()
       };
 
-      // Create final chat with both messages
       const finalChat: Chat = {
         ...updatedChat,
         messages: [...updatedChat.messages, assistantMessage]
       };
 
-      // Update state with assistant response
-      setChats(prevChats =>
-        prevChats.map(c => c.id === finalChat.id ? finalChat : c)
-      );
+      setChats(prevChats => {
+        const filteredChats = prevChats.filter(c => c.id !== finalChat.id);
+        const newChats = [finalChat, ...filteredChats];
+        chatStorage.saveChat(finalChat);
+        return newChats;
+      });
       setCurrentChat(finalChat);
 
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteChat = (chatId: number) => {
+    chatStorage.deleteChat(chatId);
+    setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
+    if (currentChat?.id === chatId) {
+      const remainingChats = chats.filter(chat => chat.id !== chatId);
+      setCurrentChat(remainingChats[0] || null);
     }
   };
 
@@ -121,6 +147,7 @@ function App() {
           currentChat={currentChat}
           setCurrentChat={setCurrentChat}
           onNewChat={() => createNewChat()}
+          onDeleteChat={handleDeleteChat}
         />
       </div>
 
