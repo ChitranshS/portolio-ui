@@ -1,0 +1,15 @@
+fastapi 
+uvicorn 
+langchain 
+langchain-together 
+pydantic 
+together
+python-dotenv
+langchain-community
+pypdf
+PyMuPDF
+termcolor
+google-cloud-aiplatform
+google-cloud-storage
+langchain_google_vertexai
+pandas
