@@ -1,5 +1,3 @@
-// src/components/Sidebar.tsx
-
 import React from 'react';
 import { Chat } from '../types';
 import { PlusCircle, MessageCircle, Trash2 } from 'lucide-react';
@@ -34,31 +32,33 @@ const Sidebar: React.FC<SidebarProps> = ({
           New Chat
         </Button>
       </div>
+      
       <ScrollArea className="flex-1 px-2">
         <div className="space-y-1 bg-[#1e1e1e] rounded-lg">
           {chats.map((chat) => (
             <div
               key={chat.id}
               className={cn(
-                "group flex items-center gap-2 px-3 py-2 text-sm transition-colors",
+                "group flex items-center px-3 py-2 text-sm transition-colors",
                 "text-gray-400 hover:text-gray-200",
                 "hover:bg-[#1e1e1e]",
+                "relative", // Added relative positioning
                 currentChat?.id === chat.id && "bg-[#1d2021] text-white"
               )}
             >
-              <button
-                onClick={() => setCurrentChat(chat)}
-                className="flex-1 flex items-center gap-2 text-left"
-              >
+              <div className="flex-1 min-w-0 flex items-center gap-2" onClick={() => setCurrentChat(chat)}>
                 <MessageCircle className="h-4 w-4 shrink-0 opacity-70" />
-                <span className="truncate">{chat.title}</span>
-              </button>
+                <span className="truncate pr-6">{chat.title}</span>
+              </div>
+              
+              {/* Delete button positioned absolutely */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteChat(chat.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                className="absolute right-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+                aria-label="Delete chat"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

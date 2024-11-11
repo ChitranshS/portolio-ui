@@ -47,63 +47,117 @@ function App() {
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {
     if (isLoading) return;
     setIsLoading(true);
-
+  
     try {
       const activeChat = chatToUse || currentChat || {
         id: Date.now(),
         title: message,
         messages: [],
       };
-
+  
+      // Add user message
       const userMessage: Message = {
         content: message,
-        role: 'user' as MessageRole,
+        role: 'user',
         timestamp: new Date().toISOString()
       };
-
+  
       const updatedChat: Chat = {
         ...activeChat,
         title: activeChat.messages.length === 0 ? message : activeChat.title,
         messages: [...(activeChat.messages || []), userMessage]
       };
-
+  
+      // Update state with user message
       setChats(prevChats => {
         const chatExists = prevChats.some(c => c.id === updatedChat.id);
-        if (chatExists) {
-          const filteredChats = prevChats.filter(c => c.id !== updatedChat.id);
-          const newChats = [updatedChat, ...filteredChats];
-          chatStorage.saveChat(updatedChat);
-          return newChats;
-        } else {
-          const newChats = [updatedChat, ...prevChats];
-          chatStorage.saveChat(updatedChat);
-          return newChats;
-        }
+        const filteredChats = chatExists ? prevChats.filter(c => c.id !== updatedChat.id) : prevChats;
+        return [updatedChat, ...filteredChats];
       });
       setCurrentChat(updatedChat);
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const assistantMessage: Message = {
-        content: message, // Echo for demo
-        role: 'assistant' as MessageRole,
-        timestamp: new Date().toISOString()
+  
+      // Create initial assistant message
+      const assistantMessage: StreamMessage = {
+        content: "",
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+        isStreaming: true
       };
-
-      const finalChat: Chat = {
+  
+      // Add initial empty assistant message
+      const chatWithAssistant = {
         ...updatedChat,
         messages: [...updatedChat.messages, assistantMessage]
       };
-
+      setCurrentChat(chatWithAssistant);
+  
+      // Make API request
+      const response = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
+        credentials: 'omit',
+        body: JSON.stringify({
+          query: message,
+          id: updatedChat.id
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      const fullResponse = data.response || 'No response from assistant';
+  
+      // Stream the response
+      let streamedContent = '';
+      const words = fullResponse.split(' ');
+      
+      for (let i = 0; i < words.length; i++) {
+        streamedContent += (i === 0 ? '' : ' ') + words[i];
+        
+        const updatedAssistantMessage: StreamMessage = {
+          ...assistantMessage,
+          content: streamedContent,
+          fullContent: fullResponse,
+          isStreaming: i < words.length - 1
+        };
+  
+        const updatedChatWithStream = {
+          ...chatWithAssistant,
+          messages: [
+            ...chatWithAssistant.messages.slice(0, -1),
+            updatedAssistantMessage
+          ]
+        };
+  
+        setCurrentChat(updatedChatWithStream);
+        await new Promise(resolve => setTimeout(resolve, 30)); // Adjust speed here
+      }
+  
+      // Save final state to storage
+      const finalChat = {
+        ...chatWithAssistant,
+        messages: [
+          ...chatWithAssistant.messages.slice(0, -1),
+          {
+            content: fullResponse,
+            role: 'assistant',
+            timestamp: new Date().toISOString()
+          }
+        ]
+      };
+      
+      chatStorage.saveChat(finalChat);
       setChats(prevChats => {
         const filteredChats = prevChats.filter(c => c.id !== finalChat.id);
-        const newChats = [finalChat, ...filteredChats];
-        chatStorage.saveChat(finalChat);
-        return newChats;
+        return [finalChat, ...filteredChats];
       });
-      setCurrentChat(finalChat);
-
+  
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {

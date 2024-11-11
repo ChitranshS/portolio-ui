@@ -5,21 +5,15 @@ import {
   Code, 
   Eye, 
   Lightbulb, 
-  Search, 
-  Volume2, 
-  Copy, 
-  ThumbsUp, 
-  ThumbsDown, 
-  RotateCcw,
-  User,
-  Bot,
-  Loader2
+  Search,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { Chat } from '../types';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { chatStorage } from '@/lib/chatStorage';
 import { cn } from "@/lib/utils";
 
 interface ChatAreaProps {
@@ -28,7 +22,10 @@ interface ChatAreaProps {
   createNewChat: (initialMessage?: string) => void;
   isLoading?: boolean;
 }
-
+interface ExpandedMessages {
+  [key: number]: boolean;
+}
+const MESSAGE_THRESHOLD = 300;
 const QuickPrompts = [
   { 
     icon: <Image size={20} />, 
@@ -57,6 +54,58 @@ const QuickPrompts = [
   },
 ];
 
+const ChatMessage: React.FC<{ 
+  msg: any; 
+  index: number;
+  expanded: boolean;
+  onToggle: () => void;
+}> = ({ msg, index, expanded, onToggle }) => {
+  const content = msg.content || '';
+  const isLongMessage = content.length > MESSAGE_THRESHOLD;
+  const displayContent = expanded ? content : content.slice(0, MESSAGE_THRESHOLD) + '...';
+
+  return (
+    <div className={cn(
+      "p-6 rounded-lg group",
+      msg.role === 'assistant' && "bg-[#2A2A2A]"
+    )}>
+      <div className="max-w-3xl mx-auto flex gap-4">
+        <div className={cn(
+          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+          msg.role === 'assistant' ? "bg-blue-500 text-white" : "bg-[#3A3A3A] text-white"
+        )}>
+          {msg.role === 'user' ? 'U' : 'A'}
+        </div>
+        <div className="flex-1">
+          <div className="prose prose-invert max-w-none">
+            <ReactMarkdown>{displayContent}</ReactMarkdown>
+            {(msg as StreamMessage).isStreaming && (
+              <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+            )}
+          </div>
+          {isLongMessage && (
+            <button
+              onClick={onToggle}
+              className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
+            >
+              {expanded ? (
+                <>
+                  <ChevronUp size={16} />
+                  Show Less
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={16} />
+                  Show More
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 const ChatArea: React.FC<ChatAreaProps> = ({
   currentChat,
   onSendMessage,
@@ -64,14 +113,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   isLoading = false
 }) => {
   const [message, setMessage] = useState('');
+  const [expandedMessages, setExpandedMessages] = useState<ExpandedMessages>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Save chat to localStorage whenever it changes
-  useEffect(() => {
-    if (currentChat) {
-      chatStorage.saveChat(currentChat);
-    }
-  }, [currentChat]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,7 +124,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     scrollToBottom();
   }, [currentChat?.messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -90,12 +133,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     
     setMessage('');
     
-    if (!currentChat) {
-      createNewChat(messageText);
-    } else {
-      onSendMessage(messageText);
-      // Add message to storage
-      chatStorage.addMessage(currentChat.id, messageText, 'user');
+    try {
+      if (!currentChat) {
+        createNewChat(messageText);
+      } else {
+        onSendMessage(messageText);
+      }
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
     }
   };
   
@@ -107,11 +152,15 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-  const handleQuickPrompt = (promptText: string) => {
-    if (!currentChat) {
-      createNewChat(promptText);
-    } else {
-      onSendMessage(promptText);
+  const handleQuickPrompt = async (promptText: string) => {
+    try {
+      if (!currentChat) {
+        createNewChat(promptText);
+      } else {
+        onSendMessage(promptText);
+      }
+    } catch (error) {
+      console.error('Error in handleQuickPrompt:', error);
     }
   };
 
@@ -166,33 +215,26 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     </div>
   );
 
+  const toggleMessage = (index: number) => {
+    setExpandedMessages(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
   return (
     <div className="flex flex-col h-screen pt-16 pl-64 mr-64 bg-[#1E1E1E] animate-fade-in animation-delay-500">
       <ScrollArea className="flex-1 px-4 lg:px-8 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
         {currentChat?.messages?.length ? (
           <div className="mx-auto">
-            {currentChat.messages.map((msg, idx) => (
-              <div
+            {currentChat?.messages?.map((msg, idx) => (
+              <ChatMessage
                 key={idx}
-                className={cn(
-                  "p-6 rounded-lg group",
-                  msg.role === 'assistant' && "bg-[#2A2A2A]"
-                )}
-              >
-                <div className="max-w-3xl mx-auto flex gap-4">
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
-                    msg.role === 'assistant' ? "bg-blue-500 text-white" : "bg-[#3A3A3A] text-white"
-                  )}>
-                    {msg.role === 'user' ? 'U' : 'A'}
-                  </div>
-                  <div className="flex-1">
-                    <div className="prose prose-invert">
-                      {msg.content}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                msg={msg}
+                index={idx}
+                expanded={!!expandedMessages[idx]}
+                onToggle={() => toggleMessage(idx)}
+              />
             ))}
             {isLoading && (
               <div className="py-6">
@@ -221,7 +263,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Message ChatGPT..."
+                placeholder="Message ChitsGPT..."
                 className="w-full p-4 pr-12 bg-[#2A2A2A] rounded-lg border border-[#3A3A3A] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onKeyDown={handleKeyDown}
               />

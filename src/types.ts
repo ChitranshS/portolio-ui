@@ -11,3 +11,8 @@ export interface Chat {
   title: string;
   messages: Message[];
 }
+
+export interface StreamMessage extends Message {
+  isStreaming?: boolean;
+  fullContent?: string;
+}
