@@ -1,6 +1,6 @@
 fastapi 
 uvicorn 
-langchain 
+langgraph 
 langchain-together 
 pydantic 
 together
@@ -13,3 +13,6 @@ google-cloud-aiplatform
 google-cloud-storage
 langchain_google_vertexai
 pandas
+psycopg==3.2.3
+psycopg-pool==3.2.3
+langgraph-checkpoint-postgres==2.0.2

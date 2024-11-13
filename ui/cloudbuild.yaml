@@ -1,0 +1,25 @@
+steps:
+  # Install dependencies
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['install']
+
+  # Build the application
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['run', 'build']
+
+  # Deploy to Cloud Storage bucket
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['-m', 'rsync', '-r', 'dist/', 'gs://resume-frontend-chits']
+
+  # Set cache headers for static assets
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['-m', 'setmeta', '-h', 'Cache-Control:public, max-age=31536000', 'gs://resume-frontend-chits/assets/**']
+
+  # Set cache headers for index.html (no-cache to ensure fresh content)
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['setmeta', '-h', 'Cache-Control:no-cache, no-store', 'gs://resume-frontend-chits/index.html']
+
+options:
+  logging: CLOUD_LOGGING_ONLY

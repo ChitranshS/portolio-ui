@@ -2,11 +2,9 @@ steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/headless-utils/resume-api', '.']
-  
   # Push the container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/headless-utils/resume-api']
-  
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -22,7 +20,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'TOGETHER_API_KEY=492d06035d1fb29fc36b26ba45d4746734b41f077027213f2b73bf7bee5a64d3'
+      - 'TOGETHER_API_KEY=492d06035d1fb29fc36b26ba45d4746734b41f077027213f2b73bf7bee5a64d3,DATABASE_URL=postgresql://neondb_owner:u0mveDWql9gx@ep-proud-glitter-a5blpm24-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require'
       - '--memory'
       - '1Gi'
       - '--cpu'
@@ -33,3 +31,5 @@ steps:
       - '10'
       - '--port'
       - '8080'
+      - '--timeout'
+      - '180'  # 5 minutes timeout

@@ -62,7 +62,7 @@ const ChatMessage: React.FC<{
 }> = ({ msg, index, expanded, onToggle }) => {
   const content = msg.content || '';
   const isLongMessage = content.length > MESSAGE_THRESHOLD;
-  const displayContent = expanded ? content : content.slice(0, MESSAGE_THRESHOLD) + '...';
+  const displayContent = expanded ? content : content.slice(0, MESSAGE_THRESHOLD);
 
   return (
     <div className={cn(
@@ -74,7 +74,7 @@ const ChatMessage: React.FC<{
           "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
           msg.role === 'assistant' ? "bg-blue-500 text-white" : "bg-[#3A3A3A] text-white"
         )}>
-          {msg.role === 'user' ? 'U' : 'A'}
+          {msg.role === 'user' ? 'H' : 'A'}  {/* Changed to H for Human */}
         </div>
         <div className="flex-1">
           <div className="prose prose-invert max-w-none">
@@ -131,6 +131,14 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     const messageText = message.trim();
     if (!messageText || isLoading) return;
     
+    // Prevent rapid-fire submissions
+    if (currentChat?.messages.some(msg => 
+      msg.content === messageText && 
+      Date.now() - new Date(msg.timestamp).getTime() < 1000
+    )) {
+      return;
+    }
+    
     setMessage('');
     
     try {
@@ -141,9 +149,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       }
     } catch (error) {
       console.error('Error in handleSubmit:', error);
+      setMessage(messageText); // Restore message on error
     }
   };
   
+  // Add a debounced quick prompt handler
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();

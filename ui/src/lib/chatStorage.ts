@@ -1,5 +1,5 @@
 // src/lib/chatStorage.ts
-
+import { v4 as uuidv4 } from 'uuid';
 import { Chat, Message, MessageRole } from '../types';
 
 class ChatStorageService {
@@ -10,10 +10,23 @@ class ChatStorageService {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (!stored) return [];
-      
       const chats = JSON.parse(stored);
+      
+      // Ensure all chats have threadId (migration)
+      const migratedChats = chats.map((chat: Chat) => {
+        if (!chat.threadId) {
+          return { ...chat, threadId: uuidv4() };
+        }
+        return chat;
+      });
+
+      // If migration occurred, save the migrated chats
+      if (JSON.stringify(chats) !== JSON.stringify(migratedChats)) {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(migratedChats));
+      }
+
       // Sort by id (timestamp) in descending order
-      return chats.sort((a: Chat, b: Chat) => b.id - a.id);
+      return migratedChats.sort((a: Chat, b: Chat) => b.id - a.id);
     } catch (error) {
       console.error('Error retrieving chat history:', error);
       return [];
@@ -23,16 +36,19 @@ class ChatStorageService {
   saveChat(chat: Chat): void {
     try {
       const chats = this.getChats();
-      const existingChatIndex = chats.findIndex(c => c.id === chat.id);
       
+      // Ensure chat has a threadId
+      const chatToSave = chat.threadId ? chat : { ...chat, threadId: uuidv4() };
+      
+      const existingChatIndex = chats.findIndex(c => c.id === chatToSave.id);
       if (existingChatIndex !== -1) {
         // Remove existing chat
         chats.splice(existingChatIndex, 1);
       }
-      
+
       // Add chat to the beginning of the array
-      chats.unshift(chat);
-      
+      chats.unshift(chatToSave);
+
       // Maintain max chats limit
       if (chats.length > this.MAX_CHATS) {
         chats.pop(); // Remove oldest chat
@@ -41,6 +57,16 @@ class ChatStorageService {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(chats));
     } catch (error) {
       console.error('Error saving chat:', error);
+    }
+  }
+
+  getChatByThreadId(threadId: string): Chat | null {
+    try {
+      const chats = this.getChats();
+      return chats.find(chat => chat.threadId === threadId) || null;
+    } catch (error) {
+      console.error('Error retrieving chat by threadId:', error);
+      return null;
     }
   }
 

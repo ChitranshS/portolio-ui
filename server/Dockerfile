@@ -3,10 +3,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install uv
+RUN pip install uv
+
 # Copy requirements first for better caching
 COPY requirements.txt .
-# RUN source .venv/bin/activate
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Create and activate virtual environment using uv
+RUN uv venv .venv
+ENV PATH="/app/.venv/bin:$PATH"
+ENV VIRTUAL_ENV="/app/.venv"
+
+# Install dependencies using uv
+RUN uv pip install --no-cache -r requirements.txt
 
 # Copy the entire application
 COPY . .

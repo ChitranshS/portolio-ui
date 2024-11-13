@@ -1,13 +1,27 @@
 # from utils.embeddings import generate_embeddings
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import os
 from together import Together
 from dotenv import load_dotenv
+import os
+from dotenv import load_dotenv
+from termcolor import colored
+from langgraph.graph import END, StateGraph, START
+from dotenv import load_dotenv
+from langgraph.graph import MessagesState
+from langgraph.checkpoint.memory import MemorySaver
+import json
+from langchain_together import ChatTogether
+from utils.checkpointer import checkpointer
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, MessagesState, StateGraph
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 load_dotenv()
 def query_handler(data_obj):
-    query = data_obj['query']
-    if "id" in data_obj:
-        id = data_obj['id']
+    
     # query_embeddings = generate_embeddings(query)
     RESUME = """
     Chitransh Srivastava
@@ -107,7 +121,7 @@ def query_handler(data_obj):
     """
     
     # resume_embeddings = generate_embeddings(RESUME)
-    together_client = Together(api_key=os.environ.get("TOGETHER_API_KEY"))
+    # together_client = Together(api_key=os.environ.get("TOGETHER_API_KEY"))
     system_prompt = f"""
 
             You are to serve as Chitransh's digital professional representative, embodying his professional identity based on his career history, skills, and accomplishments. Your role is to engage with potential employers and professional contacts in a natural, authentic manner in a normal conversation.
@@ -164,23 +178,48 @@ def query_handler(data_obj):
             - If the user is asking for information in detail then only give long responses else keep them short to improve the user experience and conversation. 
     """
 
-    response = together_client.chat.completions.create(
-    model="google/gemma-2-27b-it",
-    messages=[
-        {
-                "role": "system",
-                "content": system_prompt}
-                ,
-                {
-                "role": "user",
-                "content": query
-                }
-],
-    max_tokens=1024,
-    temperature=0.7
-)
-    # print(response)
-    return response.choices[0].message.content
+
+
+    model = ChatTogether(model="google/gemma-2-27b-it" , temperature=0 , api_key = os.getenv("TOGETHER_API_KEY"))
+    query = data_obj['query']
+    if "id" in data_obj:
+        id = data_obj['id']
+    if "threadId" in data_obj:
+        threadId = data_obj['threadId']
+    class ChatState(MessagesState):
+        should_end: bool
+        task_determined: str
+        state_variables: list
+    # Define the function that calls the model
+    def call_model(state: ChatState):
+    
+        messages = [SystemMessage(content=system_prompt)] + state["messages"]
+        response = model.invoke(messages)
+        state["messages"].append(response)
+        # print(colored(state['state_variables'],"yellow"))
+        return state
+
+    workflow = StateGraph(state_schema=ChatState)
+
+    workflow.add_node("model", call_model)
+    workflow.add_edge(START, "model")
+    workflow.add_edge("model",END)
+    # Add simple in-memory checkpointer
+    memory = MemorySaver()
+    def chat_subgraph_wrapper(thread_id_provider,user_input):
+        app = workflow.compile(checkpointer=checkpointer)
+        # print(type(thread_id_provider))
+        init_state = ChatState(
+            messages=user_input,
+        )
+        config = {"configurable": {"thread_id": thread_id_provider}}
+        for state in app.stream(init_state,config):
+                obj = state['model']['messages']
+                # pass
+        return obj
+    
+    response = chat_subgraph_wrapper(thread_id_provider=threadId,user_input=query)
+    return response[-1].content
 
 # Testing the function
-# print(query_handler({"query": "How do you his resume?" , "id": 123}))
+print(query_handler({"query": "What is my name?" , "threadId": "11"}))
