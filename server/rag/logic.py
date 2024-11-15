@@ -222,4 +222,5 @@ def query_handler(data_obj):
     return response[-1].content
 
 # Testing the function
-print(query_handler({"query": "What is my name?" , "threadId": "11"}))
+# print(query_handler({"query": "What is my name?" , "threadId": "11"}))
+# docker run -p 8000:8000 resume-server-test

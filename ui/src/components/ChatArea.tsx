@@ -131,14 +131,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     const messageText = message.trim();
     if (!messageText || isLoading) return;
     
-    // Prevent rapid-fire submissions
-    if (currentChat?.messages.some(msg => 
-      msg.content === messageText && 
-      Date.now() - new Date(msg.timestamp).getTime() < 1000
-    )) {
-      return;
-    }
-    
     setMessage('');
     
     try {
@@ -149,12 +141,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       }
     } catch (error) {
       console.error('Error in handleSubmit:', error);
-      setMessage(messageText); // Restore message on error
     }
   };
   
-  // Add a debounced quick prompt handler
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
