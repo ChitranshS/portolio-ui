@@ -5,10 +5,10 @@ import ProfileDropdown from './components/ProfileDropdown';
 import { PanelLeftClose, PanelLeft, RefreshCw } from 'lucide-react';
 import { Chat, Message, MessageRole, DBQueryResult, convertDBMessagesToChat } from './types';
 import ProfileModal from './components/ProfileModal';
-import { chatStorage } from './lib/chatStorage';
 import { v4 as uuidv4 } from 'uuid';
 import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv'
+
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -17,18 +17,51 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchMessagesFromDB = async () => {
-    setIsLoading(true);
     try {
       if (!import.meta.env.VITE_DATABASE_URL) {
         throw new Error('Database URL is not defined in environment variables');
       }
       const sql = neon(import.meta.env.VITE_DATABASE_URL);
-      const posts = await sql`
-        SELECT DISTINCT ON (metadata->'writes'->'model'->'messages') metadata -> 'writes' as query
-        FROM checkpoints
-        ORDER BY metadata->'writes'->'model'->'messages', ctid DESC
-        LIMIT 30
-      `;
+      
+      // Get current chat's thread ID
+      const threadId = currentChat?.threadId;
+      
+      let posts;
+      if (threadId) {
+        // If we have a current chat, get its latest state
+        posts = await sql`
+          WITH LastSteps AS (
+            SELECT 
+              metadata->>'thread_id' as thread_id, 
+              MAX((metadata->>'step')::integer) as max_step
+            FROM checkpoints
+            WHERE metadata->>'thread_id' = ${threadId}
+            GROUP BY metadata->>'thread_id'
+          )
+          SELECT metadata -> 'writes' as query
+          FROM checkpoints c
+          INNER JOIN LastSteps ls 
+            ON c.metadata->>'thread_id' = ls.thread_id 
+            AND (c.metadata->>'step')::integer = ls.max_step
+        `;
+      } else {
+        // If no current chat, get last states of all threads
+        posts = await sql`
+          WITH LastSteps AS (
+            SELECT 
+              metadata->>'thread_id' as thread_id, 
+              MAX((metadata->>'step')::integer) as max_step
+            FROM checkpoints
+            GROUP BY metadata->>'thread_id'
+          )
+          SELECT metadata -> 'writes' as query
+          FROM checkpoints c
+          INNER JOIN LastSteps ls 
+            ON c.metadata->>'thread_id' = ls.thread_id 
+            AND (c.metadata->>'step')::integer = ls.max_step
+          LIMIT 30
+        `;
+      }
   
       // Use a Set to track message content hashes
       const seenMessages = new Set();
@@ -63,48 +96,21 @@ function App() {
       setIsLoading(false);
     }
   };
-  const deleteFromDB = async (chatContent: string) => {
-    try {
-      const sql = neon(import.meta.env.VITE_DATABASE_URL);
-      
-      await sql`
-        DELETE FROM checkpoints
-        WHERE metadata->'writes'->'model'->'messages' @> ${chatContent}::jsonb
-      `;
-    } catch (error) {
-      console.error('Error deleting from database:', error);
-      throw error;
-    }
-  };
-  // Load saved chats and fetch DB messages on initial render
+
   useEffect(() => {
-    // const savedChats = chatStorage.getChats();
-    // if (savedChats.length > 0) {
-    //   setChats(savedChats);
-    //   setCurrentChat(savedChats[0]);
-    // }
     fetchMessagesFromDB();
   }, []);
-  // Load saved chats on initial render
-  // useEffect(() => {
-  //   const savedChats = chatStorage.getChats();
-  //   if (savedChats.length > 0) {
-  //     setChats(savedChats);
-  //     setCurrentChat(savedChats[0]); // Set most recent chat as current
-  //   }
-  // }, []);
 
   const createNewChat = (initialMessage?: string) => {
     const newChat: Chat = {
       id: Date.now(),
-      threadId: uuidv4(), // Generate unique thread ID
+      threadId: uuidv4(), // Generate new thread ID only for new chats
       title: initialMessage || 'New Chat',
       messages: []
     };
     
     setChats(prevChats => {
       const updatedChats = [newChat, ...prevChats];
-      chatStorage.saveChat(newChat);
       return updatedChats;
     });
     setCurrentChat(newChat);
@@ -114,11 +120,9 @@ function App() {
     }
   };
   
-  // Modify handleSendMessage to send threadId to backend
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {
     if (isLoading) return;
     
-    // Prevent duplicate messages
     if (currentChat?.messages.some(msg => 
       msg.content.trim() === message.trim() && 
       Date.now() - new Date(msg.timestamp).getTime() < 5000
@@ -126,17 +130,14 @@ function App() {
       return;
     }
   
-    setIsLoading(true);
-  
     try {
       const activeChat = chatToUse || currentChat || {
         id: Date.now(),
-        threadId: uuidv4(),
+        threadId: uuidv4(), // Only generate new thread ID if this is a completely new chat
         title: message,
         messages: [],
       };
   
-      // Add user message
       const userMessage: Message = {
         content: message.trim(),
         role: 'user',
@@ -149,7 +150,6 @@ function App() {
         messages: [...(activeChat.messages || []), userMessage]
       };
   
-      // Update state with user message
       setChats(prevChats => {
         const chatExists = prevChats.some(c => c.id === updatedChat.id);
         const filteredChats = chatExists 
@@ -159,7 +159,6 @@ function App() {
       });
       setCurrentChat(updatedChat);
   
-      // Create initial assistant message before the API call
       const initialAssistantMessage: StreamMessage = {
         content: "",
         role: 'assistant',
@@ -167,15 +166,13 @@ function App() {
         isStreaming: true
       };
   
-      // Add initial empty assistant message to chat
       const chatWithAssistant = {
         ...updatedChat,
         messages: [...updatedChat.messages, initialAssistantMessage]
       };
       setCurrentChat(chatWithAssistant);
   
-      // Make API request
-      const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
+      const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,19 +183,17 @@ function App() {
         body: JSON.stringify({
           query: message.trim(),
           id: updatedChat.id,
-          threadId: updatedChat.threadId
+          threadId: updatedChat.threadId // Using the existing thread ID from the chat
         }),
       });
   
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error(`HTTP error! status: ${response.status}`);
       }
   
       const data = await response.json();
       const fullResponse = data.response || 'No response from assistant';
   
-      // Stream the response
-      
       let streamedContent = '';
       const words = fullResponse.split(' ');
       
@@ -224,7 +219,6 @@ function App() {
         await new Promise(resolve => setTimeout(resolve, 30));
       }
   
-      // Save final state
       const finalChat = {
         ...chatWithAssistant,
         messages: [
@@ -237,7 +231,6 @@ function App() {
         ]
       };
       
-      chatStorage.saveChat(finalChat);
       setChats(prevChats => {
         const filteredChats = prevChats.filter(c => c.id !== finalChat.id);
         return [finalChat, ...filteredChats];
@@ -245,44 +238,61 @@ function App() {
   
     } catch (error) {
       console.error('Error sending message:', error);
-      // Optionally revert the chat to its previous state or show an error message
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleDeleteChat = async (chatId: number) => {
-    setIsLoading(true);
+  const deleteFromDB = async (threadId: string) => {
     try {
-      // Find the chat to delete
+      const sql = neon(import.meta.env.VITE_DATABASE_URL);
+      
+      console.log('Attempting to delete with threadId:', threadId);
+  
+      const result = await sql`
+        DELETE FROM checkpoints
+        WHERE metadata#>>'{thread_id}' = ${threadId}
+        OR metadata->>'thread_id' = ${threadId}
+        RETURNING *
+      `;
+  
+      console.log(`Deleted ${result.length} records`);
+  
+      if (result.length === 0) {
+        // If no records were deleted, let's check what thread_ids exist
+        const existingThreads = await sql`
+          SELECT DISTINCT metadata#>>'{thread_id}' as thread_id
+          FROM checkpoints
+          WHERE metadata#>>'{thread_id}' IS NOT NULL
+        `;
+        console.log('Existing thread_ids in database:', existingThreads);
+      }
+  
+    } catch (error) {
+      console.error('Error details:', error);
+      throw error;
+    }
+  };
+  const handleDeleteChat = async (chatId: number) => {
+    try {
       const chatToDelete = chats.find(chat => chat.id === chatId);
       
       if (chatToDelete) {
-        // Convert the chat messages to the DB format
-        const dbFormatMessages = chatToDelete.messages.map(msg => ({
-          kwargs: {
-            type: msg.role === 'user' ? 'human' : 'ai',
-            content: msg.content
-          }
-        }));
+        console.log('Chat to delete:', {
+          chatId,
+          threadId: chatToDelete.threadId,
+          fullChat: chatToDelete
+        });
   
-        // Create JSON string for the query
-        const chatContent = JSON.stringify(dbFormatMessages);
-  
-        // Delete from database
-        await deleteFromDB(chatContent);
+        await deleteFromDB(chatToDelete.threadId);
         
-        // Delete from local storage and update UI
-        chatStorage.deleteChat(chatId);
+        // Update UI only after successful deletion
         setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
         
-        // Update current chat if needed
         if (currentChat?.id === chatId) {
           const remainingChats = chats.filter(chat => chat.id !== chatId);
           setCurrentChat(remainingChats[0] || null);
         }
   
-        // Refresh chats after deletion
         await fetchMessagesFromDB();
       }
     } catch (error) {
@@ -303,7 +313,6 @@ function App() {
         {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}
       </button>
 
-      {/* Refresh Button */}
       <button
         onClick={fetchMessagesFromDB}
         className="fixed top-4 right-20 z-50 p-2 bg-[#2A2A2A] rounded-lg hover:bg-[#3A3A3A] transition-colors"
@@ -324,14 +333,14 @@ function App() {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-       <Sidebar
-  chats={chats}
-  currentChat={currentChat}
-  setCurrentChat={setCurrentChat}
-  onNewChat={() => createNewChat()}
-  onDeleteChat={handleDeleteChat}
-  isLoading={isLoading}
-/>
+        <Sidebar
+          chats={chats}
+          currentChat={currentChat}
+          setCurrentChat={setCurrentChat}
+          onNewChat={() => createNewChat()}
+          onDeleteChat={handleDeleteChat}
+          isLoading={isLoading}
+        />
       </div>
 
       <div className="flex-1 pl-0">
@@ -352,7 +361,3 @@ function App() {
 }
 
 export default App;
-
-
-// gsutil mb -p headless-utils gs://resume-frontend-chits
-// gsutil iam ch allUsers:objectViewer gs://resume-frontend-chits

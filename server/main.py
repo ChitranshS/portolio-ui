@@ -24,17 +24,19 @@ app.add_middleware(
 @app.post("/chat")
 async def handle_chat(request: Request):
     handler = None
-    try:
-        data = await request.json()
-        if data.get('query'):
-            response = query_handler(data)
-            return {
-                "query": data['query'],
-                "id": data['id'],
-                "response": response,
-                "status": "Request processed successfully"
-            }
-        else:
+    data = await request.json()
+    if data.get('query'):
+        response = query_handler(data)
+        print(response)
+        return {
+                    "query": data['query'],
+                    "threadId": data['threadId'],
+                    "response": response,
+                    "status": "Request processed successfully"
+                }
+    else:   
+            if handler is not None:
+                raise handler
             handler = HTTPException(
                 status_code=404,
                 detail={
@@ -43,17 +45,8 @@ async def handle_chat(request: Request):
                 }
             )
             raise handler
-    except:
-        if handler is not None:
-            raise handler
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "status": "Invalid Payload",
-                    "error": "Not Allowed"
-                }
-            )
+   
+       
 
 @app.post("/add_resume")
 async def handle_resume(request: Request):
@@ -106,8 +99,8 @@ async def health():
     return {'status': 'healthy'}
 
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run("main:app", reload=True, host="0.0.0.0", port=8000)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", reload=True, host="0.0.0.0", port=8000)
 
 
