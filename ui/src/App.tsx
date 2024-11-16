@@ -19,6 +19,9 @@ function App() {
   const fetchMessagesFromDB = async () => {
     setIsLoading(true);
     try {
+      if (!import.meta.env.VITE_DATABASE_URL) {
+        throw new Error('Database URL is not defined in environment variables');
+      }
       const sql = neon(import.meta.env.VITE_DATABASE_URL);
       const posts = await sql`
         SELECT DISTINCT ON (metadata->'writes'->'model'->'messages') metadata -> 'writes' as query
@@ -133,6 +136,7 @@ function App() {
         messages: [],
       };
   
+      // Add user message
       const userMessage: Message = {
         content: message.trim(),
         role: 'user',
@@ -155,20 +159,36 @@ function App() {
       });
       setCurrentChat(updatedChat);
   
-      // Stream response handling...
-      const response = await fetch('http://localhost:8000/chat', {
+      // Create initial assistant message before the API call
+      const initialAssistantMessage: StreamMessage = {
+        content: "",
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+        isStreaming: true
+      };
+  
+      // Add initial empty assistant message to chat
+      const chatWithAssistant = {
+        ...updatedChat,
+        messages: [...updatedChat.messages, initialAssistantMessage]
+      };
+      setCurrentChat(chatWithAssistant);
+  
+      // Make API request
+      const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        mode: 'cors',
+        credentials: 'omit',
         body: JSON.stringify({
           query: message.trim(),
           id: updatedChat.id,
           threadId: updatedChat.threadId
         }),
       });
-  
   
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -178,6 +198,7 @@ function App() {
       const fullResponse = data.response || 'No response from assistant';
   
       // Stream the response
+      
       let streamedContent = '';
       const words = fullResponse.split(' ');
       
@@ -185,7 +206,7 @@ function App() {
         streamedContent += (i === 0 ? '' : ' ') + words[i];
         
         const updatedAssistantMessage: StreamMessage = {
-          ...assistantMessage,
+          ...initialAssistantMessage,
           content: streamedContent,
           fullContent: fullResponse,
           isStreaming: i < words.length - 1
@@ -200,10 +221,10 @@ function App() {
         };
   
         setCurrentChat(updatedChatWithStream);
-        await new Promise(resolve => setTimeout(resolve, 30)); // Adjust speed here
+        await new Promise(resolve => setTimeout(resolve, 30));
       }
   
-      // Save final state to storage
+      // Save final state
       const finalChat = {
         ...chatWithAssistant,
         messages: [
@@ -224,6 +245,7 @@ function App() {
   
     } catch (error) {
       console.error('Error sending message:', error);
+      // Optionally revert the chat to its previous state or show an error message
     } finally {
       setIsLoading(false);
     }
