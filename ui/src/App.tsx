@@ -198,6 +198,7 @@ function App() {
       const fullResponse = data.response || 'No response from assistant';
   
       // Stream the response
+      
       let streamedContent = '';
       const words = fullResponse.split(' ');
       
