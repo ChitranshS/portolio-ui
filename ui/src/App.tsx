@@ -97,6 +97,20 @@ function App() {
     }
   };
 
+  const deleteFromDB = async (chatContent: string) => {
+    try {
+      const sql = neon(import.meta.env.VITE_DATABASE_URL);
+      
+      await sql`
+        DELETE FROM checkpoints
+        WHERE metadata->'writes'->'model'->'messages' @> ${chatContent}::jsonb
+      `;
+    } catch (error) {
+      console.error('Error deleting from database:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchMessagesFromDB();
   }, []);
@@ -242,50 +256,23 @@ function App() {
       setIsLoading(false);
     }
   };
-  const deleteFromDB = async (threadId: string) => {
-    try {
-      const sql = neon(import.meta.env.VITE_DATABASE_URL);
-      
-      console.log('Attempting to delete with threadId:', threadId);
-  
-      const result = await sql`
-        DELETE FROM checkpoints
-        WHERE metadata#>>'{thread_id}' = ${threadId}
-        OR metadata->>'thread_id' = ${threadId}
-        RETURNING *
-      `;
-  
-      console.log(`Deleted ${result.length} records`);
-  
-      if (result.length === 0) {
-        // If no records were deleted, let's check what thread_ids exist
-        const existingThreads = await sql`
-          SELECT DISTINCT metadata#>>'{thread_id}' as thread_id
-          FROM checkpoints
-          WHERE metadata#>>'{thread_id}' IS NOT NULL
-        `;
-        console.log('Existing thread_ids in database:', existingThreads);
-      }
-  
-    } catch (error) {
-      console.error('Error details:', error);
-      throw error;
-    }
-  };
+
   const handleDeleteChat = async (chatId: number) => {
     try {
       const chatToDelete = chats.find(chat => chat.id === chatId);
       
       if (chatToDelete) {
-        console.log('Chat to delete:', {
-          chatId,
-          threadId: chatToDelete.threadId,
-          fullChat: chatToDelete
-        });
+        const dbFormatMessages = chatToDelete.messages.map(msg => ({
+          kwargs: {
+            type: msg.role === 'user' ? 'human' : 'ai',
+            content: msg.content
+          }
+        }));
   
-        await deleteFromDB(chatToDelete.threadId);
+        const chatContent = JSON.stringify(dbFormatMessages);
+  
+        await deleteFromDB(chatContent);
         
-        // Update UI only after successful deletion
         setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
         
         if (currentChat?.id === chatId) {
