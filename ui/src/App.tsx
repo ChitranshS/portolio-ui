@@ -8,6 +8,7 @@ import ProfileModal from './components/ProfileModal';
 import { v4 as uuidv4 } from 'uuid';
 import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv'
+import { BackgroundBeams } from "@/components/ui/background-beams";
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -297,6 +298,7 @@ function App() {
   };
 
   return (
+    
     <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative">
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}

@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, 
@@ -15,6 +16,16 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
+import { BackgroundGradient } from "@/components/ui/background-gradient";
+import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
+//  const placeholders = [
+//   "What's the first rule of Fight Club?",
+//   "Who is Tyler Durden?",
+//   "Where is Andrew Laeddis Hiding?",
+//   "Write a Javascript method to reverse a string",
+//   "How to assemble your own PC?",
+// ];
 
 interface ChatAreaProps {
   currentChat: Chat | null;
@@ -178,30 +189,44 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       <span className="text-3xl font-bold">ChitsGPT</span>
     </div>
   );
-
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setMessage(e.target.value)
+  // };
+  const words = `Ask me anything about Chitransh's professional background and projects`
   const EmptyState = () => (
-    <div className="h-full flex flex-col items-center justify-center px-4">
+    <div className="h-full flex flex-col items-center justify-center mx-10">
       <Logo />
-      <h1 className="text-2xl font-semibold text-gray-300 mb-2">
+      {/* <h1 className="text-2xl font-semibold text-gray-300 mb-2">
         How can I help you today?
-      </h1>
+      </h1> */}
       <h3 className="text-md text-gray-500 mb-8">
-        Ask me anything about <span className="font-semibold text-gray-400">Chitransh's </span> professional background and projects
+      <TextGenerateEffect words={words} className="text-sm text-gray-500" />
+        
       </h3>
       <div className="w-full max-w-2xl">
         <div className="relative mb-8">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+          <BackgroundGradient className="rounded-full">
           <input
             type="text"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) =>setMessage(e.target.value)}
             placeholder="Message ChitsGPT..."
-            className="w-full p-4 pl-12 pr-12 bg-[#12141c] rounded-lg border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59] focus:border-transparent text-md"
             onKeyDown={handleKeyDown}
             autoFocus
-          />
+            className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59] focus:border-transparent text-md"
+          /> 
+          </BackgroundGradient>
+                {/* <PlaceholdersAndVanishInput
+                  type="text"
+                  value={message}
+                  onChange={handleChange}
+                  placeholders={placeholders}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+      /> */}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 p-2 md:grid-cols-3 gap-3">
           {QuickPrompts.map((prompt, idx) => (
             <button
               key={idx}
