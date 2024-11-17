@@ -23,10 +23,9 @@ function App() {
       }
       const sql = neon(import.meta.env.VITE_DATABASE_URL);
       
-      // Get current chat's thread ID
       const threadId = currentChat?.threadId;
-      
       let posts;
+  
       if (threadId) {
         // If we have a current chat, get its latest state
         posts = await sql`
@@ -38,7 +37,9 @@ function App() {
             WHERE metadata->>'thread_id' = ${threadId}
             GROUP BY metadata->>'thread_id'
           )
-          SELECT metadata -> 'writes' as query
+          SELECT 
+            metadata -> 'writes' as query,
+            metadata->>'thread_id' as thread_id  -- Added thread_id to selection
           FROM checkpoints c
           INNER JOIN LastSteps ls 
             ON c.metadata->>'thread_id' = ls.thread_id 
@@ -54,7 +55,9 @@ function App() {
             FROM checkpoints
             GROUP BY metadata->>'thread_id'
           )
-          SELECT metadata -> 'writes' as query
+          SELECT 
+            metadata -> 'writes' as query,
+            metadata->>'thread_id' as thread_id  -- Added thread_id to selection
           FROM checkpoints c
           INNER JOIN LastSteps ls 
             ON c.metadata->>'thread_id' = ls.thread_id 
@@ -63,15 +66,14 @@ function App() {
         `;
       }
   
-      // Use a Set to track message content hashes
       const seenMessages = new Set();
       const uniqueChats: Chat[] = [];
   
       posts.forEach((post, index) => {
         if (post?.query?.model?.messages) {
           const dbMessages = post.query.model.messages;
+          const threadId = post.thread_id; // Get thread_id from the query result
           
-          // Create a hash of the chat content
           const chatHash = JSON.stringify(dbMessages.map(msg => ({
             content: msg.kwargs.content.trim(),
             type: msg.kwargs.type
@@ -79,7 +81,8 @@ function App() {
   
           if (!seenMessages.has(chatHash)) {
             seenMessages.add(chatHash);
-            const newChat = convertDBMessagesToChat(dbMessages, index);
+            // Pass threadId to the conversion function
+            const newChat = convertDBMessagesToChat(dbMessages, index, threadId);
             uniqueChats.push(newChat);
           }
         }
@@ -97,14 +100,29 @@ function App() {
     }
   };
 
-  const deleteFromDB = async (chatContent: string) => {
+  const deleteFromDB = async (threadId: string) => {
     try {
+      if (!import.meta.env.VITE_DATABASE_URL) {
+        throw new Error('Database URL is not defined in environment variables');
+      }
       const sql = neon(import.meta.env.VITE_DATABASE_URL);
       
+      // Delete from multiple tables
       await sql`
-        DELETE FROM checkpoints
-        WHERE metadata->'writes'->'model'->'messages' @> ${chatContent}::jsonb
+        DELETE FROM checkpoints 
+        WHERE metadata->>'thread_id' = ${threadId};
       `;
+  
+      await sql`
+        DELETE FROM checkpoint_blobs 
+        WHERE thread_id = ${threadId};
+      `;
+  
+      await sql`
+        DELETE FROM checkpoint_writes 
+        WHERE thread_id = ${threadId};
+      `;
+  
     } catch (error) {
       console.error('Error deleting from database:', error);
       throw error;
@@ -137,21 +155,13 @@ function App() {
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {
     if (isLoading) return;
     
-    if (currentChat?.messages.some(msg => 
-      msg.content.trim() === message.trim() && 
-      Date.now() - new Date(msg.timestamp).getTime() < 5000
-    )) {
-      return;
-    }
-  
     try {
       const activeChat = chatToUse || currentChat || {
         id: Date.now(),
-        threadId: uuidv4(), // Only generate new thread ID if this is a completely new chat
+        threadId: uuidv4(), // Only generate new threadId for completely new chats
         title: message,
         messages: [],
       };
-  
       const userMessage: Message = {
         content: message.trim(),
         role: 'user',
@@ -196,8 +206,8 @@ function App() {
         credentials: 'omit',
         body: JSON.stringify({
           query: message.trim(),
-          id: updatedChat.id,
-          threadId: updatedChat.threadId // Using the existing thread ID from the chat
+          id: activeChat.id,
+          threadId: activeChat.threadId // Use the threadId from the active chat
         }),
       });
   
@@ -261,26 +271,23 @@ function App() {
     try {
       const chatToDelete = chats.find(chat => chat.id === chatId);
       
-      if (chatToDelete) {
-        const dbFormatMessages = chatToDelete.messages.map(msg => ({
-          kwargs: {
-            type: msg.role === 'user' ? 'human' : 'ai',
-            content: msg.content
-          }
-        }));
-  
-        const chatContent = JSON.stringify(dbFormatMessages);
-  
-        await deleteFromDB(chatContent);
+      if (chatToDelete?.threadId) {
+        // Delete all messages with this thread ID
+        await deleteFromDB(chatToDelete.threadId);
         
+        // Update local state
         setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
         
+        // If the deleted chat was the current chat, select a new current chat
         if (currentChat?.id === chatId) {
           const remainingChats = chats.filter(chat => chat.id !== chatId);
           setCurrentChat(remainingChats[0] || null);
         }
   
+        // Refresh the chat list from database
         await fetchMessagesFromDB();
+      } else {
+        console.error('No thread ID found for chat to delete');
       }
     } catch (error) {
       console.error('Error deleting chat:', error);

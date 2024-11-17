@@ -51,9 +51,19 @@ export const convertDBMessageToMessage = (dbMessage: DBMessage): Message => ({
 });
 
 // Helper function to convert DB messages to Chat
-export const convertDBMessagesToChat = (dbMessages: DBMessage[], index: number): Chat => ({
-  id: Date.now() + index, // Add index to ensure uniqueness
-  threadId: crypto.randomUUID(),
-  title: dbMessages[0]?.kwargs.content || 'Imported Chat',
-  messages: dbMessages.map(convertDBMessageToMessage)
-});
+export const convertDBMessagesToChat = (
+  dbMessages: DBMessage[], 
+  index: number,
+  threadId: string
+): Chat => {
+  return {
+    id: Date.now() - index, // Ensures unique IDs with correct ordering
+    threadId: threadId, // Use the thread_id from the database
+    title: dbMessages[0]?.kwargs?.content || 'Chat',
+    messages: dbMessages.map(msg => ({
+      content: msg.kwargs.content,
+      role: msg.kwargs.type === 'human' ? 'user' : 'assistant',
+      timestamp: new Date().toISOString()
+    }))
+  };
+};
