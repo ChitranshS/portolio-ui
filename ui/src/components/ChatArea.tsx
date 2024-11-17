@@ -30,27 +30,32 @@ const QuickPrompts = [
   { 
     icon: <Image size={20} />, 
     text: "Work Experience", 
-    description: "Professional background and roles" 
+    description: "Professional background and roles" ,
+    prompt: "Tell me about your work experience"
   },
   { 
     icon: <Code size={20} />, 
     text: "Skills & Expertise", 
-    description: "Technical and soft skills" 
+    description: "Technical and soft skills" ,
+    prompt: "Tell me about your skills and expertise"
   },
   { 
     icon: <Eye size={20} />, 
     text: "Technical Projects", 
-    description: "View my coding projects and implementations" 
+    description: "View my coding projects and implementations" ,
+    prompt: "Tell me about your technical projects"
   },
   { 
     icon: <Lightbulb size={20} />, 
     text: "GitHub Portfolio", 
-    description: "Browse my code repositories" 
+    description: "Browse my code repositories",
+    prompt: "Tell me about your GitHub portfolio"
   },
   { 
     icon: <Lightbulb size={20} />, 
     text: "Education", 
-    description: "Academic background and skills" 
+    description: "Academic background and skills" ,
+    prompt: "Tell me about your education"
   },
 ];
 
@@ -74,7 +79,7 @@ const ChatMessage: React.FC<{
           "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
           msg.role === 'assistant' ? "bg-blue-500 text-white" : "bg-[#3A3A3A] text-white"
         )}>
-          {msg.role === 'user' ? 'H' : 'A'}  {/* Changed to H for Human */}
+          {msg.role === 'user' ? 'U' : 'C'}  {/* Changed to H for Human */}
         </div>
         <div className="flex-1">
           <div className="prose prose-invert max-w-none">
@@ -200,7 +205,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           {QuickPrompts.map((prompt, idx) => (
             <button
               key={idx}
-              onClick={() => handleQuickPrompt(prompt.text)}
+              onClick={() => handleQuickPrompt(prompt.prompt)}
               className="flex flex-col items-center gap-2 p-4 bg-[#2A2A2A] hover:bg-[#3A3A3A] rounded-lg transition-all border border-[#3A3A3A] group"
             >
               <div className="p-2 rounded-lg bg-[#3A3A3A] group-hover:bg-[#4A4A4A] transition-colors">

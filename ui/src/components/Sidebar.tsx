@@ -36,8 +36,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           
       </div>
       <ScrollArea className="flex-1 px-2">
-        <div className="flex items-center justify-center h-full z-0 absolute inset-0 bg-[#2A2A2A] opacity-50">
-          <div className='text-gray-500 text-xs '>Global Chat History</div>
+        <div className="flex items-center justify-center h-full z-0 absolute inset-0 bg-[#2A2A2A] opacity-30">
+          <div className='text-gray-300 text-xs '><strong>Global Chat History</strong></div>
         </div>
         <div className="space-y-1 bg-[#1e1e1e] rounded-lg opacity-90">
           {chats.map((chat) => (
