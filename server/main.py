@@ -6,8 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware  # Add this import
 from dotenv import load_dotenv
 import os
 from rag.logic import query_handler
-
+from utils.postgres import connection_pool
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 load_dotenv()
+
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -20,7 +23,21 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-
+@app.middleware("http")
+async def db_session_middleware(request: Request, call_next):
+    
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        if "SSL SYSCALL error" in str(e):
+            # Reset pool and retry
+            connection_pool.reset()
+            return JSONResponse(
+                status_code=500,
+                content={"message": "Database connection error, please retry"}
+            )
+        raise
 @app.post("/chat")
 async def handle_chat(request: Request):
     handler = None
