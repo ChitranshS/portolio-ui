@@ -1,4 +1,5 @@
 _ignore
 **/__pycache__
+.env
 *.env
-server/.env
+.venv
