@@ -297,10 +297,10 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex bg-[#1E1E1E] text-gray-100 relative">
+    <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative">
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-[#2A2A2A] rounded-lg hover:bg-[#3A3A3A] transition-colors"
+        className="fixed top-4 left-4 z-50 p-2 bg-[#0a0b0f] rounded-lg hover:bg-[#3A3A3A] transition-colors"
         aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}

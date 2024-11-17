@@ -29,17 +29,17 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 hover:bg-[#2A2A2A] rounded-full transition-colors"
+        className="p-2 hover:bg-[#282c3a] rounded-full transition-colors"
       >
         <User size={24} />
       </button>
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-[#2A2A2A] rounded-lg shadow-lg py-2 z-50">
+        <div className="absolute right-0 mt-2 w-56 bg-[#12141c] rounded-lg shadow-lg py-2 z-50 text-gray-400">
           {menuItems.map((item, index) => (
             <a
               href={item.url}
               key={index}
-              className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-[#3A3A3A] transition-colors"
+              className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-[#6c5dd3] hover:text-white transition-colors"
               onClick={() => setIsOpen(false)}
               target="_blank"
               rel="noopener noreferrer"

@@ -72,12 +72,12 @@ const ChatMessage: React.FC<{
   return (
     <div className={cn(
       "p-6 rounded-lg group",
-      msg.role === 'assistant' && "bg-[#2A2A2A]"
+      msg.role === 'assistant' && "bg-[#12141c]"
     )}>
       <div className="max-w-3xl mx-auto flex gap-4">
         <div className={cn(
           "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
-          msg.role === 'assistant' ? "bg-blue-500 text-white" : "bg-[#3A3A3A] text-white"
+          msg.role === 'assistant' ? "bg-[#6c5dd3] text-white" : "bg-[#282c3a] text-white"
         )}>
           {msg.role === 'user' ? 'U' : 'C'}  {/* Changed to H for Human */}
         </div>
@@ -196,7 +196,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Message ChitsGPT..."
-            className="w-full p-4 pl-12 pr-12 bg-[#2A2A2A] rounded-lg border border-[#3A3A3A] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-md"
+            className="w-full p-4 pl-12 pr-12 bg-[#12141c] rounded-lg border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59] focus:border-transparent text-md"
             onKeyDown={handleKeyDown}
             autoFocus
           />
@@ -206,9 +206,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             <button
               key={idx}
               onClick={() => handleQuickPrompt(prompt.prompt)}
-              className="flex flex-col items-center gap-2 p-4 bg-[#2A2A2A] hover:bg-[#3A3A3A] rounded-lg transition-all border border-[#3A3A3A] group"
+              className="flex flex-col items-center gap-2 p-4 bg-[#12141c] hover:bg-[#282c3a] rounded-lg transition-all border border-[#12141c] group"
             >
-              <div className="p-2 rounded-lg bg-[#3A3A3A] group-hover:bg-[#4A4A4A] transition-colors">
+              <div className="p-2 rounded-lg bg-[#6c5dd3] group-hover:bg-[#6c5dd3] transition-colors">
                 {prompt.icon}
               </div>
               <span className="font-medium text-center">{prompt.text}</span>
@@ -228,7 +228,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen pt-16 pl-64 mr-64 bg-[#1E1E1E] animate-fade-in animation-delay-500">
+    <div className="flex flex-col h-screen pt-16 pl-64 mr-64 bg-[#0a0b0f] animate-fade-in animation-delay-500">
       <ScrollArea className="flex-1 px-4 lg:px-8 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
         {currentChat?.messages?.length ? (
           <div className="mx-auto">
@@ -261,7 +261,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </ScrollArea>
 
       {currentChat?.messages?.length > 0 && (
-        <div className="border-t border-[#2A2A2A] p-4 bg-[#1E1E1E]">
+        <div className="border-t border-[#0a0b0f] p-4 bg-[#0a0b0f]">
           <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
             <div className="relative">
               <input
@@ -269,12 +269,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Message ChitsGPT..."
-                className="w-full p-4 pr-12 bg-[#2A2A2A] rounded-lg border border-[#3A3A3A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-4 pr-12 bg-[#12141c] rounded-lg border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59]"
                 onKeyDown={handleKeyDown}
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-[#3A3A3A] rounded-lg disabled:opacity-50"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-[#302c59] rounded-lg disabled:opacity-50"
                 disabled={!message.trim() || isLoading}
               >
                 <Send className="h-5 w-5" />

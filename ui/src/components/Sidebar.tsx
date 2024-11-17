@@ -23,11 +23,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   isLoading = false  // Destructure and provide default value
 }) => {
   return (
-    <div className="flex flex-col h-full bg-[#2A2A2A] border-r-2 border-[#2A2A2A]">
-      <div className="p-4 border-b-2 border-[#2A2A2A]">
+    <div className="flex flex-col h-full bg-[#12141c] border-r-2 border-[#12141c]">
+      <div className="p-4 border-b-2 border-[#12141c]">
         <Button
           variant="ghost"
-          className="w-full gap-2 bg-[#1e1e1e] hover:bg-[#1e1e1e] text-gray-300 hover:text-white transition-colors"
+          className="w-full gap-2 bg-[#12141c] hover:bg-[#282c3a] text-gray-300 hover:text-white transition-colors"
           onClick={onNewChat}
         >
           <PlusCircle className="h-4 w-4" />
@@ -36,27 +36,27 @@ const Sidebar: React.FC<SidebarProps> = ({
           
       </div>
       <ScrollArea className="flex-1 px-2">
-        <div className="flex items-center justify-center h-full z-0 absolute inset-0 bg-[#2A2A2A] opacity-30">
+        <div className="flex items-center justify-center h-full z-0 absolute inset-0 bg-[#12141c] opacity-30">
           <div className='text-gray-300 text-xs '><strong>Global Chat History</strong></div>
         </div>
-        <div className="space-y-1 bg-[#1e1e1e] rounded-lg opacity-90">
+        <div className="space-y-1 bg-[#12141c] rounded-lg opacity-90">
           {chats.map((chat) => (
             <div
               key={`chat-${chat.id}`}
               className={cn(
                 "group flex items-center px-3 py-2 text-sm transition-colors",
                 "text-gray-400 hover:text-gray-200",
-                "hover:bg-[#1e1e1e]",
+                "hover:bg-[#282c3a]",
                 "relative",
-                currentChat?.id === chat.id && "bg-[#1d2021] text-white"
+                currentChat?.id === chat.id && "bg-[#282c3a] text-white"
               )}
             >
               <div 
                 className="flex-1 min-w-0 flex items-center gap-2" 
                 onClick={() => setCurrentChat(chat)}
               >
-                <MessageCircle className="h-4 w-4 shrink-0 opacity-70" />
-                <span className="truncate pr-6">{chat.title}</span>
+                <MessageCircle className="h-4 w-4 shrink-0 text-[#6c5dd3]" />
+                <span className="truncate pr-6 text-gray-300">{chat.title}</span>
               </div>
               <button
                 onClick={(e) => {
