@@ -10,7 +10,7 @@ import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv'
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
@@ -89,9 +89,9 @@ function App() {
       });
   
       setChats(uniqueChats);
-      if (uniqueChats.length > 0 && !currentChat) {
-        setCurrentChat(uniqueChats[0]);
-      }
+      // if (uniqueChats.length > 0 && !currentChat) {
+      //   setCurrentChat(uniqueChats[0]);
+      // }
   
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -280,12 +280,11 @@ function App() {
         
         // If the deleted chat was the current chat, select a new current chat
         if (currentChat?.id === chatId) {
-          const remainingChats = chats.filter(chat => chat.id !== chatId);
-          setCurrentChat(remainingChats[0] || null);
+          setCurrentChat(null); // Changed to set null instead of first chat
         }
   
         // Refresh the chat list from database
-        await fetchMessagesFromDB();
+        // await fetchMessagesFromDB();
       } else {
         console.error('No thread ID found for chat to delete');
       }
@@ -307,18 +306,18 @@ function App() {
         {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}
       </button>
 
-      <button
+      {/* <button
         onClick={fetchMessagesFromDB}
         className="fixed top-4 right-20 z-50 p-2 bg-[#2A2A2A] rounded-lg hover:bg-[#3A3A3A] transition-colors"
         aria-label="Refresh messages"
       >
         <RefreshCw size={24} />
-      </button>
+      </button> */}
 
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
+          onClick={() => setIsSidebarOpen(true)}
         />
       )}
 
