@@ -196,7 +196,7 @@ function App() {
       };
       setCurrentChat(chatWithAssistant);
   
-      const response = await fetch('http://localhost:8000/chat', {
+      const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
