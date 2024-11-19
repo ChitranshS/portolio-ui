@@ -23,21 +23,22 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-@app.middleware("http")
-async def db_session_middleware(request: Request, call_next):
-    
+
+# Initialize database connection pool
+@app.on_event("startup")
+async def startup_event():
+    # Test database connection on startup
     try:
-        response = await call_next(request)
-        return response
+        with connection_pool.connection() as conn:
+            conn.execute("SELECT 1")
+        print("Database connection pool initialized successfully")
     except Exception as e:
-        if "SSL SYSCALL error" in str(e):
-            # Reset pool and retry
-            connection_pool.reset()
-            return JSONResponse(
-                status_code=500,
-                content={"message": "Database connection error, please retry"}
-            )
+        print(f"Failed to initialize database connection pool: {e}")
         raise
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    connection_pool.close()
 @app.post("/chat")
 async def handle_chat(request: Request):
     handler = None

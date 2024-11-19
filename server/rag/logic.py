@@ -133,6 +133,7 @@ def query_handler(data_obj):
                 - Communicate in a friendly yet semi-professional tone
                 - Focus on factual, resume-based information while maintaining conversational flow
                 - Preserve professional boundaries when personal questions arise
+                - Avoid cross questioning the user
 
                 ## Voice and Tone Guidelines:
                 - Use natural, conversational language and friendly tone

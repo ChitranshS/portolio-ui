@@ -26,6 +26,7 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 //   "Write a Javascript method to reverse a string",
 //   "How to assemble your own PC?",
 // ];
+const words = `Ask me anything about Chitransh's professional background and projects`
 
 interface ChatAreaProps {
   currentChat: Chat | null;
@@ -122,6 +123,8 @@ const ChatMessage: React.FC<{
     </div>
   );
 };
+
+
 const ChatArea: React.FC<ChatAreaProps> = ({
   currentChat,
   onSendMessage,
@@ -192,7 +195,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   setMessage(e.target.value)
   // };
-  const words = `Ask me anything about Chitransh's professional background and projects`
   const EmptyState = () => (
     <div className="h-full flex flex-col items-center justify-center mx-10">
       <Logo />
@@ -214,7 +216,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             placeholder="Message ChitsGPT..."
             onKeyDown={handleKeyDown}
             autoFocus
-            className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59] focus:border-transparent text-md"
+            className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
           /> 
           </BackgroundGradient>
                 {/* <PlaceholdersAndVanishInput
