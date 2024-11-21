@@ -73,18 +73,26 @@ function App() {
       posts.forEach((post, index) => {
         if (post?.query?.model?.messages) {
           const dbMessages = post.query.model.messages;
-          const threadId = post.thread_id; // Get thread_id from the query result
+          const threadId = post.thread_id;
+
+          // Skip messages that are ping requests
+          const isPingRequest = dbMessages.some(msg => 
+            msg.kwargs.content.trim() === "Respond with OKAY only" || 
+            threadId === "pinging_123"
+          );
           
-          const chatHash = JSON.stringify(dbMessages.map(msg => ({
-            content: msg.kwargs.content.trim(),
-            type: msg.kwargs.type
-          })));
-  
-          if (!seenMessages.has(chatHash)) {
-            seenMessages.add(chatHash);
-            // Pass threadId to the conversion function
-            const newChat = convertDBMessagesToChat(dbMessages, index, threadId);
-            uniqueChats.push(newChat);
+          if (!isPingRequest) {
+            const chatHash = JSON.stringify(dbMessages.map(msg => ({
+              content: msg.kwargs.content.trim(),
+              type: msg.kwargs.type
+            })));
+    
+            if (!seenMessages.has(chatHash)) {
+              seenMessages.add(chatHash);
+              // Pass threadId to the conversion function
+              const newChat = convertDBMessagesToChat(dbMessages, index, threadId);
+              uniqueChats.push(newChat);
+            }
           }
         }
       });
@@ -130,36 +138,102 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    fetchMessagesFromDB();
-  }, []);
+  // Function to check if enough time has passed since last reload
+  const shouldSendRandomRequests = (): boolean => {
+    const lastReloadTime = localStorage.getItem('lastReloadTime');
+    const currentTime = Date.now();
+    const fiveMinutesInMs = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-  const createNewChat = (initialMessage?: string) => {
-    const newChat: Chat = {
-      id: Date.now(),
-      threadId: uuidv4(), // Generate new thread ID only for new chats
-      title: initialMessage || 'New Chat',
-      messages: []
-    };
-    
-    setChats(prevChats => {
-      const updatedChats = [newChat, ...prevChats];
-      return updatedChats;
-    });
-    setCurrentChat(newChat);
-  
-    if (initialMessage) {
-      handleSendMessage(initialMessage, newChat);
+    if (!lastReloadTime) {
+      localStorage.setItem('lastReloadTime', currentTime.toString());
+      return true;
     }
+
+    const timeDifference = currentTime - parseInt(lastReloadTime);
+    if (timeDifference >= fiveMinutesInMs) {
+      localStorage.setItem('lastReloadTime', currentTime.toString());
+      return true;
+    }
+
+    console.log('⏳ Skipping random requests - Less than 5 minutes since last reload', {
+      lastReload: new Date(parseInt(lastReloadTime)).toLocaleString(),
+      timeUntilNextEligible: `${((fiveMinutesInMs - timeDifference) / 1000 / 60).toFixed(2)} minutes`
+    });
+    return false;
   };
-  
+
+  // Function to send random requests
+  const sendRandomRequests = async () => {
+    const sharedThreadId = 'pinging_123';
+    console.log('%c📡 Starting Random Requests Sequence', 'background: #4b0082; color: white; font-size: 14px; padding: 8px; border-radius: 5px;');
+    console.log({
+      threadId: sharedThreadId,
+      totalRequests: 5,
+      startTime: new Date().toLocaleString()
+    });
+    
+    for (let i = 0; i < 5; i++) {
+      const requestId = uuidv4();
+      console.log('%c🔄 Request ' + (i + 1) + '/5', 'color: #ffa500; font-weight: bold;', {
+        requestId,
+        threadId: sharedThreadId,
+        timestamp: new Date().toLocaleString()
+      });
+      
+      try {
+        const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          mode: 'cors',
+          credentials: 'omit',
+          body: JSON.stringify({
+            query: "Respond with OKAY only",
+            id: requestId,
+            threadId: sharedThreadId
+          }),
+        });
+        
+        const data = await response.json();
+        console.log('%c✅ Request ' + (i + 1) + ' Successful', 'color: #00ff00; font-weight: bold;', { 
+          status: response.status,
+          response: data,
+          requestId,
+          threadId: sharedThreadId,
+          timestamp: new Date().toLocaleString()
+        });
+      } catch (error) {
+        console.log('%c❌ Request ' + (i + 1) + ' Failed', 'color: #ff0000; font-weight: bold;', {
+          error,
+          requestId,
+          threadId: sharedThreadId,
+          timestamp: new Date().toLocaleString()
+        });
+      }
+      
+      // Add a small delay between requests
+      if (i < 4) { // Don't wait after the last request
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+    
+    console.log('%c🎉 Random Requests Sequence Completed', 'background: #4b0082; color: white; font-size: 14px; padding: 8px; border-radius: 5px;');
+    console.log({
+      threadId: sharedThreadId,
+      completionTime: new Date().toLocaleString(),
+      status: 'All requests completed'
+    });
+  };
+
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {
     if (isLoading) return;
     
     try {
       const activeChat = chatToUse || currentChat || {
         id: Date.now(),
-        threadId: uuidv4(), // Only generate new threadId for completely new chats
+        threadId: uuidv4(),
         title: message,
         messages: [],
       };
@@ -197,72 +271,122 @@ function App() {
       };
       setCurrentChat(chatWithAssistant);
   
-      const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        mode: 'cors',
-        credentials: 'omit',
-        body: JSON.stringify({
-          query: message.trim(),
-          id: activeChat.id,
-          threadId: activeChat.threadId // Use the threadId from the active chat
-        }),
-      });
+      try {
+        const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          mode: 'cors',
+          credentials: 'omit',
+          body: JSON.stringify({
+            query: message.trim(),
+            id: activeChat.id,
+            threadId: activeChat.threadId
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const fullResponse = data.response || 'No response from assistant';
   
-      if (!response.ok) {
-        console.error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      const fullResponse = data.response || 'No response from assistant';
-  
-      let streamedContent = '';
-      const words = fullResponse.split(' ');
-      
-      for (let i = 0; i < words.length; i++) {
-        streamedContent += (i === 0 ? '' : ' ') + words[i];
+        let streamedContent = '';
+        const words = fullResponse.split(' ');
         
-        const updatedAssistantMessage: StreamMessage = {
-          ...initialAssistantMessage,
-          content: streamedContent,
-          fullContent: fullResponse,
-          isStreaming: i < words.length - 1
-        };
+        for (let i = 0; i < words.length; i++) {
+          streamedContent += (i === 0 ? '' : ' ') + words[i];
+          
+          const updatedAssistantMessage: StreamMessage = {
+            ...initialAssistantMessage,
+            content: streamedContent,
+            fullContent: fullResponse,
+            isStreaming: i < words.length - 1
+          };
   
-        const updatedChatWithStream = {
+          const updatedChatWithStream = {
+            ...chatWithAssistant,
+            messages: [
+              ...chatWithAssistant.messages.slice(0, -1),
+              updatedAssistantMessage
+            ]
+          };
+  
+          setCurrentChat(updatedChatWithStream);
+          await new Promise(resolve => setTimeout(resolve, 30));
+        }
+  
+        const finalChat = {
           ...chatWithAssistant,
           messages: [
             ...chatWithAssistant.messages.slice(0, -1),
-            updatedAssistantMessage
+            {
+              content: fullResponse,
+              role: 'assistant',
+              timestamp: new Date().toISOString()
+            }
           ]
         };
+        
+        setChats(prevChats => {
+          const filteredChats = prevChats.filter(c => c.id !== finalChat.id);
+          return [finalChat, ...filteredChats];
+        });
   
-        setCurrentChat(updatedChatWithStream);
-        await new Promise(resolve => setTimeout(resolve, 30));
-      }
-  
-      const finalChat = {
-        ...chatWithAssistant,
-        messages: [
-          ...chatWithAssistant.messages.slice(0, -1),
-          {
-            content: fullResponse,
+      } catch (error: any) {
+        console.error('Error in chat request:', error);
+        const errorMessage = error.message || String(error);
+        
+        // Check for SSL error in both error message and response
+        const isSSLError = 
+          errorMessage.includes('consuming input failed: SSL SYSCALL error: EOF detected') ||
+          (error.response?.data === 'consuming input failed: SSL SYSCALL error: EOF detected');
+
+        if (isSSLError) {
+          console.log('%c🚨 SSL EOF ERROR DETECTED 🚨', 'background: #ff0000; color: white; font-size: 16px; padding: 10px; border-radius: 5px;');
+          console.log('%c⚡ Initiating 5 Random Requests to Stabilize Connection ⚡', 'background: #ffa500; color: black; font-size: 14px; padding: 8px; border-radius: 5px;');
+          console.log({
+            error: errorMessage,
+            timestamp: new Date().toLocaleString(),
+            action: 'Starting random requests sequence'
+          });
+          
+          await sendRandomRequests();
+          
+          console.log('%c✅ Random Requests Completed Successfully', 'background: #00ff00; color: black; font-size: 14px; padding: 8px; border-radius: 5px;');
+          console.log('%c🔄 Retrying Original Message...', 'background: #0000ff; color: white; font-size: 14px; padding: 8px; border-radius: 5px;');
+          
+          // Retry the original request after a short delay
+          setTimeout(() => {
+            console.log({
+              action: 'Retrying original message',
+              message: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+              timestamp: new Date().toLocaleString()
+            });
+            handleSendMessage(message, chatToUse);
+          }, 1000);
+          return;
+        } else {
+          // Handle other errors
+          const errorResponse: StreamMessage = {
+            content: "Sorry, there was an error processing your request. Please try again.",
             role: 'assistant',
-            timestamp: new Date().toISOString()
-          }
-        ]
-      };
-      
-      setChats(prevChats => {
-        const filteredChats = prevChats.filter(c => c.id !== finalChat.id);
-        return [finalChat, ...filteredChats];
-      });
-  
+            timestamp: new Date().toISOString(),
+            isStreaming: false
+          };
+          
+          const chatWithError = {
+            ...chatWithAssistant,
+            messages: [...chatWithAssistant.messages.slice(0, -1), errorResponse]
+          };
+          setCurrentChat(chatWithError);
+        }
+      }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error in handleSendMessage:', error);
     } finally {
       setIsLoading(false);
     }
@@ -297,6 +421,30 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    // sendRandomRequests();
+    fetchMessagesFromDB();
+  }, []);
+
+  const createNewChat = (initialMessage?: string) => {
+    const newChat: Chat = {
+      id: Date.now(),
+      threadId: uuidv4(), // Generate new thread ID only for new chats
+      title: initialMessage || 'New Chat',
+      messages: []
+    };
+    
+    setChats(prevChats => {
+      const updatedChats = [newChat, ...prevChats];
+      return updatedChats;
+    });
+    setCurrentChat(newChat);
+  
+    if (initialMessage) {
+      handleSendMessage(initialMessage, newChat);
+    }
+  };
+  
   return (
     
     <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative overflow-hidden">

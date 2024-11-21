@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 disabled={isLoading}
                 className={cn(
-                  "absolute right-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity",
+                  "absolute right-2 sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500 transition-opacity",
                   isLoading && "cursor-not-allowed opacity-50"
                 )}
                 aria-label="Delete chat"

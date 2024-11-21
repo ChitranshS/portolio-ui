@@ -18,7 +18,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = () => {
   }, []);
 
   const menuItems = [
-    { icon: <FileDown size={18} />, label: 'Download Resume', url: 'https://github.com/ChitranshS' },
+    { icon: <FileDown size={18} />, label: 'Download Resume', url: 'https://drive.google.com/file/d/1_y4Z950ODSpSFMoVVoyW8YJWJptp8RL3/view?usp=sharing' },
     { icon: <Github size={18} />, label: 'Github', url: 'https://github.com/ChitranshS' },
     { icon: <Linkedin size={18} />, label: 'LinkedIn', url: 'https://www.linkedin.com/in/chitransh-srivastava-ai/' },
     { icon: <Twitter size={18} />, label: 'Twitter', url: 'https://twitter.com/ChitranshS' },

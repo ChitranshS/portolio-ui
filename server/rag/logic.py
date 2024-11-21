@@ -175,6 +175,7 @@ def query_handler(data_obj):
                 - Stay within the bounds of provided information
                 - Keep responses authentic and professionally engaging
                 - Use emojis where appropriate.
+                - When mentioning a project or github repo, provide a link to it.
                 - You have to return the output strictly in markdown format. The markdown also should highlight the important information in the resume.It should also be structured in a way that is easy to read and understand.
                 - If the user is asking for information in detail then only give long responses else keep them short to improve the user experience and conversation. 
         """

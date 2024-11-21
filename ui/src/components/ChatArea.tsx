@@ -9,18 +9,17 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  Briefcase,
-  Cpu,
   Github,
-  GraduationCap,
   Sparkles,
-  Terminal,
   Coffee,
   Heart,
   Music,
   Code2,
   Gamepad2,
-  Trophy
+  HelpCircle,
+  Puzzle,
+  Briefcase,
+  Cpu
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Chat } from '../types';
@@ -31,15 +30,9 @@ import { cn } from "@/lib/utils";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
-//  const placeholders = [
-//   "What's the first rule of Fight Club?",
-//   "Who is Tyler Durden?",
-//   "Where is Andrew Laeddis Hiding?",
-//   "Write a Javascript method to reverse a string",
-//   "How to assemble your own PC?",
-// ];
+import DevelopersSection from './DeveloperSection';
+import PromptNav from './PromptNav';
 const words = `Ask me anything about Chitransh's professional background and projects`
-
 interface ChatAreaProps {
   currentChat: Chat | null;
   onSendMessage: (message: string) => void;
@@ -60,7 +53,7 @@ const QuickPrompts = [
   { 
     icon: <Code size={20} />, 
     text: "Skills & Expertise", 
-    description: "Technical and soft skills" ,
+    description: "Technical and soft skills     " ,
     prompt: "Tell me about your skills and expertise"
   },
   { 
@@ -92,7 +85,7 @@ const ChatMessage: React.FC<{
   const content = msg.content || '';
   const isLongMessage = content.length > MESSAGE_THRESHOLD;
   const displayContent = expanded ? content : content.slice(0, MESSAGE_THRESHOLD);
-
+  
   return (
     <div 
       className={cn(
@@ -107,7 +100,6 @@ const ChatMessage: React.FC<{
           "relative w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 group-hover:scale-110",
           msg.role === 'assistant' ? "bg-[#6c5dd3] text-white" : "bg-[#282c3a] text-white"
         )}>
-          {/* Animated ring effect */}
           <div className={cn(
             "absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300",
             msg.role === 'assistant' ? "bg-[#6c5dd3]" : "bg-[#282c3a]",
@@ -170,8 +162,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   createNewChat,
   isLoading = false
 }) => {
+  
   const [message, setMessage] = useState('');
   const [expandedMessages, setExpandedMessages] = useState<ExpandedMessages>({});
+  const [activeSection, setActiveSection] = useState('quick'); 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -232,41 +226,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     </div>
   );
 
-  const PortfolioBox = ({ icon, title, description, onClick }: { 
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-    onClick: () => void;
-  }) => (
-    <div
-      onClick={onClick}
-      className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all hover:scale-105 cursor-pointer"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity group-hover:opacity-20" />
-      <div className="relative rounded-lg bg-[#12141c] p-6">
-        <div className="inline-block rounded-lg bg-[#6c5dd3] p-3">
-          {icon}
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold text-white group-hover:text-[#6c5dd3] transition-colors">
-            {title}
-          </h3>
-          <p className="mt-1 text-sm text-gray-400">
-            {description}
-          </p>
-        </div>
-        <div className="absolute bottom-6 right-6 transform translate-x-8 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
-          <Sparkles className="h-5 w-5 text-[#6c5dd3]" />
-        </div>
-      </div>
-    </div>
-  );
 
   const developerInfo = {
-    name: "Chitransh Gour",
-    title: "Full Stack Developer",
+    name: "Chitransh Srivastava",
     location: "India",
-    experience: "3+ years",
     skills: ["React", "Node.js", "TypeScript", "Python", "AWS"],
     socialLinks: {
       github: "https://github.com/chitrangcodes",
@@ -275,12 +238,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-  const StatCard = ({ label, value }: { label: string; value: string }) => (
-    <div className="bg-[#12141c] rounded-lg p-4 border border-[#302c59]">
-      <div className="text-sm text-gray-400">{label}</div>
-      <div className="text-lg font-semibold mt-1">{value}</div>
-    </div>
-  );
 
   const SkillBadge = ({ skill }: { skill: string }) => (
     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#6c5dd3] bg-opacity-20 text-[#6c5dd3]">
@@ -304,22 +261,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     </div>
   );
 
-  const ActivityWidget = ({ icon, title, value, color }: {
-    icon: React.ReactNode;
-    title: string;
-    value: string;
-    color: string;
-  }) => (
-    <div className={`absolute hidden lg:block p-4 bg-[#1a1c26] rounded-xl transform hover:scale-105 
-      transition-all duration-300 shadow-lg hover:shadow-${color}/20 cursor-pointer`}>
-      <div className={`p-2 rounded-lg bg-${color} bg-opacity-20 mb-3 w-fit`}>
-        {icon}
-      </div>
-      <div className="text-sm text-gray-400">{title}</div>
-      <div className="text-lg font-semibold mt-1">{value}</div>
-    </div>
-  );
-
   const funFacts = [
     "Drinks ☕️ while coding",
     "Loves 🎮 gaming breaks",
@@ -328,9 +269,155 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     "Bug hunter 🐛"
   ];
 
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'quick':
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+            {QuickPrompts.map((prompt, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleQuickPrompt(prompt.prompt)}
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+                <div className="relative rounded-lg bg-[#12141c] p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                      {prompt.icon}
+                    </div>
+                    <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                  </div>
+                  <span className="font-medium text-lg block mb-2">{prompt.text}</span>
+                  <span className="text-sm text-gray-400 block leading-relaxed">{prompt.description}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        );
+      case 'games':
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+            <button
+              onClick={() => handleQuickPrompt("Let's play a word guessing game!")}
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+              <div className="relative rounded-lg bg-[#12141c] p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                    <Gamepad2 className="h-5 w-5 text-[#6c5dd3]" />
+                  </div>
+                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                </div>
+                <span className="font-medium text-lg block mb-2">Word Guess</span>
+                <span className="text-sm text-gray-400 block leading-relaxed">Challenge me to a word guessing game!</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickPrompt("Let's play 20 questions!")}
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+              <div className="relative rounded-lg bg-[#12141c] p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                    <HelpCircle className="h-5 w-5 text-[#6c5dd3]" />
+                  </div>
+                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                </div>
+                <span className="font-medium text-lg block mb-2">20 Questions</span>
+                <span className="text-sm text-gray-400 block leading-relaxed">Think of something, I'll try to guess it!</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickPrompt("Let's play a riddle game!")}
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+              <div className="relative rounded-lg bg-[#12141c] p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                    <Puzzle className="h-5 w-5 text-[#6c5dd3]" />
+                  </div>
+                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                </div>
+                <span className="font-medium text-lg block mb-2">Riddles</span>
+                <span className="text-sm text-gray-400 block leading-relaxed">Test your wit with some brain teasers!</span>
+              </div>
+            </button>
+          </div>
+        );
+      case 'about':
+        return (
+          <div className="animate-slideIn">
+            <DevelopersSection />
+          </div>
+        );
+      case 'professional':
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+            <button
+              onClick={() => handleQuickPrompt("Tell me about your professional experience and skills")}
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+              <div className="relative rounded-lg bg-[#12141c] p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                    <Briefcase className="h-5 w-5 text-[#6c5dd3]" />
+                  </div>
+                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                </div>
+                <span className="font-medium text-lg block mb-2">Experience</span>
+                <span className="text-sm text-gray-400 block leading-relaxed">Learn about my professional journey and expertise</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickPrompt("What projects have you worked on?")}
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+              <div className="relative rounded-lg bg-[#12141c] p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                    <Code2 className="h-5 w-5 text-[#6c5dd3]" />
+                  </div>
+                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                </div>
+                <span className="font-medium text-lg block mb-2">Projects</span>
+                <span className="text-sm text-gray-400 block leading-relaxed">Explore my portfolio of projects and achievements</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickPrompt("What are your technical skills and expertise?")}
+              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+              <div className="relative rounded-lg bg-[#12141c] p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                    <Cpu className="h-5 w-5 text-[#6c5dd3]" />
+                  </div>
+                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                </div>
+                <span className="font-medium text-lg block mb-2">Skills</span>
+                <span className="text-sm text-gray-400 block leading-relaxed">Discover my technical skills and areas of expertise</span>
+              </div>
+            </button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   const EmptyState = () => (
     <div className="relative h-full flex flex-col items-center justify-center p-4 md:p-10">
-      {/* Floating Widgets */}
       <FloatingWidget 
         icon={<Coffee className="h-4 w-4 text-[#6c5dd3]" />} 
         text="Coffee Driven"
@@ -356,9 +443,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         delay={1.5}
       />
 
-
-
-      {/* Fun Facts Ticker */}
       <div className="absolute left-4 top-1/2 hidden lg:block">
         <div className="bg-[#1a1c26] p-4 rounded-xl">
           <div className="text-sm text-gray-400 mb-2">Fun Facts</div>
@@ -374,103 +458,49 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             ))}
           </div>
         </div>
+
       </div>
 
-      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
         <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000" />
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000" />
       </div>
 
-      {/* Main Content */}
       <div className="relative z-10">
-        {/* Developer Info Widget - Moved to top */}
-        <div className="w-full max-w-4xl px-4 mb-16">
-          <div className="bg-[#1a1c26] rounded-xl p-8 transform hover:scale-[1.02] transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#6c5dd3]/10">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-              <div className="relative">
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-[#6c5dd3] to-[#302c59] rounded-full opacity-75 group-hover:opacity-100 animate-tilt transition-all duration-300"></div>
-                <Avatar className="w-24 h-24 relative">
-                  <AvatarImage src="/logo.jpg" />
-                  <AvatarFallback>CG</AvatarFallback>
-                </Avatar>
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h2 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-200">
-                  {developerInfo.name}
-                </h2>
-                <p className="text-gray-400 mb-6 text-lg">{developerInfo.title}</p>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-8">
-                  {developerInfo.skills.map((skill) => (
-                    <SkillBadge key={skill} skill={skill} />
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard label="Experience" value={developerInfo.experience} />
-                  <StatCard label="Location" value={developerInfo.location} />
-                  <StatCard label="Projects" value="15+" />
-                  <StatCard label="Open Source" value="20+" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Logo and Chat Section */}
-        <div className="mb-12">
+          <div className="mb-12">
           <Logo />
           <h3 className="text-md text-gray-500 mt-6 text-center">
             <TextGenerateEffect words={words} className="text-sm text-gray-500" />
           </h3>
         </div>
-
         <div className="w-full max-w-4xl px-4">
-          <div className="relative mb-16">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-            <BackgroundGradient className="rounded-full">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Message ChitsGPT..."
-                onKeyDown={handleKeyDown}
-                autoFocus
-                className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
-              /> 
-            </BackgroundGradient>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {QuickPrompts.map((prompt, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleQuickPrompt(prompt.prompt)}
-                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-                <div className="relative rounded-lg bg-[#12141c] p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                      {prompt.icon}
-                    </div>
-                    <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
-                  </div>
-                  <span className="font-medium text-lg block mb-2">{prompt.text}</span>
-                  <span className="text-sm text-gray-400 block leading-relaxed">{prompt.description}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="relative mb-16">
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+      <BackgroundGradient className="rounded-full">
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Message ChitsGPT..."
+          onKeyDown={handleKeyDown}
+          autoFocus
+          className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
+        /> 
+      </BackgroundGradient>
+    </div>
+    <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
+    <div className="transition-all duration-300 ease-in-out">
+      {renderSection()}
+    </div>
+  </div>
       </div>
     </div>
   );
 
   const ChatDecorations = () => (
     <>
-      {/* Floating Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Top Left */}
         <div className="absolute top-8 left-8 hidden lg:block">
           <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float">
             <Code2 className="h-4 w-4 text-[#6c5dd3]" />
@@ -478,7 +508,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        {/* Top Right */}
         <div className="absolute top-16 right-8 hidden lg:block">
           <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-500">
             <Coffee className="h-4 w-4 text-yellow-500" />
@@ -486,7 +515,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        {/* Bottom Left */}
         <div className="absolute bottom-24 left-8 hidden lg:block">
           <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1000">
             <Music className="h-4 w-4 text-green-500" />
@@ -494,7 +522,6 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        {/* Bottom Right */}
         <div className="absolute bottom-32 right-8 hidden lg:block">
           <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1500">
             <Heart className="h-4 w-4 text-pink-500" />
@@ -502,13 +529,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        {/* Animated Background Blobs */}
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob" />
         <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-2000" />
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-4000" />
       </div>
 
-      {/* Corner Decorations */}
       <div className="fixed top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" />
       <div className="fixed top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-500 to-transparent opacity-10 pointer-events-none" />
       <div className="fixed bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-500 to-transparent opacity-10 pointer-events-none" />

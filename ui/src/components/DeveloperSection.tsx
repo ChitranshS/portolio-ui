@@ -1,73 +1,59 @@
-import React from 'react';
-import { Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { Github, Linkedin, Mail } from 'lucide-react';
+import { HoverBorderGradient } from './ui/hover-border-gradient';
+import { BackgroundGradient } from './ui/background-gradient';
+import { TextGenerateEffect } from './ui/text-generate-effect';
+import { SpotlightBackground } from './ui/spotlight-background';
 
 const DevelopersSection = () => {
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
   return (
-    <div className="bg-[#13131a] rounded-3xl p-5">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">Developers</h3>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Developers"
-            className="bg-[#ff36f7] bg-opacity-20 text-white placeholder-white placeholder-opacity-70 px-4 py-2 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-[#ff36f7] focus:ring-opacity-50 text-sm"
-          />
-          <Search className="w-4 h-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-white opacity-70" />
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <DevCard
-          icon="🚀"
-          iconBg="bg-blue-500"
-          name="Astronautics"
-          role="Three.js Developer"
-          description="WebGL and 3D Graphics Expert"
-        />
-        <DevCard
-          icon="⚡"
-          iconBg="bg-purple-500"
-          name="Cyber Pazilliad"
-          role="Full-stack Developer"
-          description="Building scalable web applications"
-        />
-      </div>
-    </div>
-  );
-}
-
-interface DevCardProps {
-  icon: string;
-  iconBg: string;
-  name: string;
-  role: string;
-  description: string;
-}
-
-const DevCard = ({ icon, iconBg, name, role, description }: DevCardProps) => {
-  return (
-    <div className="bg-[#1a1a23] rounded-xl p-4">
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex gap-3">
-          <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center text-white`}>
-            {icon}
+    <SpotlightBackground>
+      <div className="p-6 max-w-2xl mx-auto">
+        <div className="flex flex-col items-center space-y-4">
+          {/* Profile Image */}
+          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#6c5dd3] shadow-lg transform transition-transform duration-300 hover:scale-105">
+            <img
+              src="face.webp"
+              alt="Chitransh"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = 'https://github.com/identicons/chitransh.png';
+              }}
+            />
           </div>
-          <div>
-            <h4 className="font-medium text-white">{name}</h4>
-            <p className="text-sm text-gray-400">{role}</p>
+
+          {/* Name and Title */}
+          <div className="text-center">
+            <TextGenerateEffect words="Chitransh Srivastava" className="text-2xl font-bold text-white mb-1" />
+            <p className="text-[#6c5dd3] text-lg font-semibold">Full Stack Developer & AI Enthusiast</p>
+          </div>
+
+          {/* Social Links */}
+          <div className="flex space-x-4">
+            <a href="https://github.com/chitranshs" target="_blank" rel="noopener noreferrer" 
+               className="p-2 rounded-full bg-[#302c59] hover:bg-[#6c5dd3] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110">
+              <Github className="w-5 h-5 text-white" />
+            </a>
+            <a href="https://linkedin.com/in/chitransh-srivastava-ai" target="_blank" rel="noopener noreferrer"
+               className="p-2 rounded-full bg-[#302c59] hover:bg-[#6c5dd3] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110">
+              <Linkedin className="w-5 h-5 text-white" />
+            </a>
+            <a href="mailto:chitransh0210@gmail.com" target="_blank" rel="noopener noreferrer"
+               className="p-2 rounded-full bg-[#302c59] hover:bg-[#6c5dd3] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110">
+              <Mail className="w-5 h-5 text-white" />
+            </a>
+          </div>
+
+          {/* Bio */}
+          <div className="text-gray-300 text-sm text-center mt-4 max-w-md">
+            Passionate about building innovative solutions with cutting-edge technology.
+            Specialized in full-stack development and AI applications.
           </div>
         </div>
-        <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#2a2a33] transition-colors">
-          <span className="text-gray-400">↗</span>
-        </button>
       </div>
-      <div className="flex items-center gap-2">
-        <p className="text-sm text-gray-400 flex-1">{description}</p>
-        <button className="w-8 h-8 bg-[#00ff9d] bg-opacity-20 rounded-full flex items-center justify-center">
-          <span className="text-[#00ff9d] text-xl">→</span>
-        </button>
-      </div>
-    </div>
+    </SpotlightBackground>
   );
 };
 

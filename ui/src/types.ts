@@ -57,8 +57,8 @@ export const convertDBMessagesToChat = (
   threadId: string
 ): Chat => {
   return {
-    id: Date.now() - index, // Ensures unique IDs with correct ordering
-    threadId: threadId, // Use the thread_id from the database
+    id: Date.now() - (index * 1000), // Add more time difference between IDs
+    threadId: threadId,
     title: dbMessages[0]?.kwargs?.content || 'Chat',
     messages: dbMessages.map(msg => ({
       content: msg.kwargs.content,
