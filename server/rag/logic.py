@@ -181,7 +181,7 @@ def query_handler(data_obj):
 
 
 
-        model = ChatTogether(model="google/gemma-2-27b-it" , temperature=0.5 , api_key = os.getenv("TOGETHER_API_KEY"))
+        model = ChatTogether(model="google/gemma-2-9b-it" , temperature=0.5 , api_key = os.getenv("TOGETHER_API_KEY"))
         query = data_obj['query']
         # if "id" in data_obj:
         #     id = data_obj['id']
