@@ -1,12 +1,15 @@
 // types.ts
 
 // Existing types
-export type MessageRole = 'user' | 'assistant';
+export enum MessageRole {
+  User = 'user',
+  Assistant = 'assistant'
+}
 
 export interface Message {
   content: string;
   role: MessageRole;
-  timestamp: string;
+  timestamp?: string;
 }
 
 export interface Chat {
@@ -46,7 +49,7 @@ export interface DBQueryResult {
 // Helper function to convert DB message to app Message
 export const convertDBMessageToMessage = (dbMessage: DBMessage): Message => ({
   content: dbMessage.kwargs.content,
-  role: dbMessage.kwargs.type === 'human' ? 'user' : 'assistant',
+  role: dbMessage.kwargs.type === 'human' ? MessageRole.User : MessageRole.Assistant,
   timestamp: new Date().toISOString()
 });
 
@@ -62,7 +65,7 @@ export const convertDBMessagesToChat = (
     title: dbMessages[0]?.kwargs?.content || 'Chat',
     messages: dbMessages.map(msg => ({
       content: msg.kwargs.content,
-      role: msg.kwargs.type === 'human' ? 'user' : 'assistant',
+      role: msg.kwargs.type === 'human' ? MessageRole.User : MessageRole.Assistant,
       timestamp: new Date().toISOString()
     }))
   };

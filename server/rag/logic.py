@@ -91,7 +91,7 @@ def query_handler(data_obj):
         Link: https://github.com/ChitranshS
         Link: https://twitter.com/chtzzzzzex
         Link: https://github.com/ChitranshS/SummaView-Youtube-Extension/tree/main
-        Link: https://clip-surf.vercel.app
+        Link: https://clip-surf.vercel.app 
 
 
         Project Details:

@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ProfileDropdown from './components/ProfileDropdown';
-import { PanelLeftClose, PanelLeft, RefreshCw } from 'lucide-react';
-import { Chat, Message, MessageRole, DBQueryResult, convertDBMessagesToChat } from './types';
+import { PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Chat, Message, MessageRole, StreamMessage, DBQueryResult, convertDBMessagesToChat } from './types';
 import ProfileModal from './components/ProfileModal';
 import { v4 as uuidv4 } from 'uuid';
 import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv'
 import { BackgroundBeams } from "@/components/ui/background-beams";
+import { threadStorage } from './lib/threadStorage';
+import GlobalChats from './pages/GlobalChats';
 
-function App() {
+function MainApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGlobalView, setIsGlobalView] = useState(false);
 
   const fetchMessagesFromDB = async () => {
     try {
@@ -40,31 +44,59 @@ function App() {
           )
           SELECT 
             metadata -> 'writes' as query,
-            metadata->>'thread_id' as thread_id  -- Added thread_id to selection
+            metadata->>'thread_id' as thread_id
           FROM checkpoints c
           INNER JOIN LastSteps ls 
             ON c.metadata->>'thread_id' = ls.thread_id 
             AND (c.metadata->>'step')::integer = ls.max_step
         `;
       } else {
-        // If no current chat, get last states of all threads
-        posts = await sql`
-          WITH LastSteps AS (
+        // For global view or when no stored thread IDs
+        if (isGlobalView) {
+          posts = await sql`
+            WITH LastSteps AS (
+              SELECT 
+                metadata->>'thread_id' as thread_id, 
+                MAX((metadata->>'step')::integer) as max_step
+              FROM checkpoints
+              GROUP BY metadata->>'thread_id'
+            )
             SELECT 
-              metadata->>'thread_id' as thread_id, 
-              MAX((metadata->>'step')::integer) as max_step
-            FROM checkpoints
-            GROUP BY metadata->>'thread_id'
-          )
-          SELECT 
-            metadata -> 'writes' as query,
-            metadata->>'thread_id' as thread_id  -- Added thread_id to selection
-          FROM checkpoints c
-          INNER JOIN LastSteps ls 
-            ON c.metadata->>'thread_id' = ls.thread_id 
-            AND (c.metadata->>'step')::integer = ls.max_step
-          LIMIT 30
-        `;
+              metadata -> 'writes' as query,
+              metadata->>'thread_id' as thread_id
+            FROM checkpoints c
+            INNER JOIN LastSteps ls 
+              ON c.metadata->>'thread_id' = ls.thread_id 
+              AND (c.metadata->>'step')::integer = ls.max_step
+            ORDER BY ls.max_step DESC
+            LIMIT 100
+          `;
+        } else {
+          // For personal view with stored thread IDs
+          const storedThreadIds = threadStorage.getThreadIds();
+          if (storedThreadIds.length === 0) {
+            posts = [];
+          } else {
+            posts = await sql`
+              WITH LastSteps AS (
+                SELECT 
+                  metadata->>'thread_id' as thread_id, 
+                  MAX((metadata->>'step')::integer) as max_step
+                FROM checkpoints
+                WHERE metadata->>'thread_id' = ANY(${storedThreadIds}::text[])
+                GROUP BY metadata->>'thread_id'
+              )
+              SELECT 
+                metadata -> 'writes' as query,
+                metadata->>'thread_id' as thread_id
+              FROM checkpoints c
+              INNER JOIN LastSteps ls 
+                ON c.metadata->>'thread_id' = ls.thread_id 
+                AND (c.metadata->>'step')::integer = ls.max_step
+              ORDER BY ls.max_step DESC
+            `;
+          }
+        }
       }
   
       const seenMessages = new Set();
@@ -227,6 +259,29 @@ function App() {
     });
   };
 
+  useEffect(() => {
+    fetchMessagesFromDB();
+    if (shouldSendRandomRequests()) {
+      console.log('%c⚡ Sending 5 Random Requests ⚡', 'background: #ffa500; color: black; font-size: 14px; padding: 8px; border-radius: 5px;');
+      sendRandomRequests();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Ctrl + Shift + G
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'g') {
+        event.preventDefault();
+        setIsGlobalView(prev => !prev);
+        setCurrentChat(null);
+        fetchMessagesFromDB();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {
     if (isLoading) return;
     
@@ -248,27 +303,28 @@ function App() {
         title: activeChat.messages.length === 0 ? message : activeChat.title,
         messages: [...(activeChat.messages || []), userMessage]
       };
-  
-      setChats(prevChats => {
-        const chatExists = prevChats.some(c => c.id === updatedChat.id);
-        const filteredChats = chatExists 
-          ? prevChats.filter(c => c.id !== updatedChat.id) 
-          : prevChats;
-        return [updatedChat, ...filteredChats];
-      });
-      setCurrentChat(updatedChat);
-  
+
+      // Add initial assistant message right away
       const initialAssistantMessage: StreamMessage = {
         content: "",
         role: 'assistant',
         timestamp: new Date().toISOString(),
         isStreaming: true
       };
-  
+
       const chatWithAssistant = {
         ...updatedChat,
         messages: [...updatedChat.messages, initialAssistantMessage]
       };
+
+      // Single state update for both chats and currentChat
+      setChats(prevChats => {
+        const chatExists = prevChats.some(c => c.id === chatWithAssistant.id);
+        const filteredChats = chatExists 
+          ? prevChats.filter(c => c.id !== chatWithAssistant.id) 
+          : prevChats;
+        return [chatWithAssistant, ...filteredChats];
+      });
       setCurrentChat(chatWithAssistant);
   
       try {
@@ -338,52 +394,20 @@ function App() {
   
       } catch (error: any) {
         console.error('Error in chat request:', error);
-        const errorMessage = error.message || String(error);
         
-        // Check for SSL error in both error message and response
-        const isSSLError = 
-          errorMessage.includes('consuming input failed: SSL SYSCALL error: EOF detected') ||
-          (error.response?.data === 'consuming input failed: SSL SYSCALL error: EOF detected');
-
-        if (isSSLError) {
-          console.log('%c🚨 SSL EOF ERROR DETECTED 🚨', 'background: #ff0000; color: white; font-size: 16px; padding: 10px; border-radius: 5px;');
-          console.log('%c⚡ Initiating 5 Random Requests to Stabilize Connection ⚡', 'background: #ffa500; color: black; font-size: 14px; padding: 8px; border-radius: 5px;');
-          console.log({
-            error: errorMessage,
-            timestamp: new Date().toLocaleString(),
-            action: 'Starting random requests sequence'
-          });
-          
-          await sendRandomRequests();
-          
-          console.log('%c✅ Random Requests Completed Successfully', 'background: #00ff00; color: black; font-size: 14px; padding: 8px; border-radius: 5px;');
-          console.log('%c🔄 Retrying Original Message...', 'background: #0000ff; color: white; font-size: 14px; padding: 8px; border-radius: 5px;');
-          
-          // Retry the original request after a short delay
-          setTimeout(() => {
-            console.log({
-              action: 'Retrying original message',
-              message: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
-              timestamp: new Date().toLocaleString()
-            });
-            handleSendMessage(message, chatToUse);
-          }, 1000);
-          return;
-        } else {
-          // Handle other errors
-          const errorResponse: StreamMessage = {
-            content: "Sorry, there was an error processing your request. Please try again.",
-            role: 'assistant',
-            timestamp: new Date().toISOString(),
-            isStreaming: false
-          };
-          
-          const chatWithError = {
-            ...chatWithAssistant,
-            messages: [...chatWithAssistant.messages.slice(0, -1), errorResponse]
-          };
-          setCurrentChat(chatWithError);
-        }
+        // Handle errors
+        const errorResponse: StreamMessage = {
+          content: "Sorry, there was an error processing your request. Please try again.",
+          role: 'assistant',
+          timestamp: new Date().toISOString(),
+          isStreaming: false
+        };
+        
+        const chatWithError = {
+          ...chatWithAssistant,
+          messages: [...chatWithAssistant.messages.slice(0, -1), errorResponse]
+        };
+        setCurrentChat(chatWithError);
       }
     } catch (error) {
       console.error('Error in handleSendMessage:', error);
@@ -421,32 +445,36 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    // sendRandomRequests();
-    fetchMessagesFromDB();
-  }, []);
-
-  const createNewChat = (initialMessage?: string) => {
+  const createNewChat = async (initialMessage?: string) => {
+    const threadId = uuidv4();
     const newChat: Chat = {
       id: Date.now(),
-      threadId: uuidv4(), // Generate new thread ID only for new chats
+      threadId,
       title: initialMessage || 'New Chat',
-      messages: []
+      messages: [], // Always start with empty messages
     };
-    
-    setChats(prevChats => {
-      const updatedChats = [newChat, ...prevChats];
-      return updatedChats;
-    });
+
     setCurrentChat(newChat);
-  
+    setChats(prevChats => [newChat, ...prevChats]);
+    threadStorage.addThreadId(threadId);
+
     if (initialMessage) {
-      handleSendMessage(initialMessage, newChat);
+      await handleSendMessage(initialMessage, newChat);
     }
   };
-  
+
+  const deleteChat = (chatId: number) => {
+    const chatToDelete = chats.find(chat => chat.id === chatId);
+    if (chatToDelete?.threadId) {
+      threadStorage.removeThreadId(chatToDelete.threadId);
+    }
+    setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
+    if (currentChat?.id === chatId) {
+      setCurrentChat(null);
+    }
+  };
+
   return (
-    
     <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative overflow-hidden">
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -468,14 +496,18 @@ function App() {
         className={`fixed left-0 top-0 h-full w-[280px] z-30 transition-transform duration-300 ease-in-out transform 
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <Sidebar
-          chats={chats}
-          currentChat={currentChat}
-          setCurrentChat={setCurrentChat}
-          onNewChat={() => createNewChat()}
-          onDeleteChat={handleDeleteChat}
-          isLoading={isLoading}
-        />
+        <div className="h-full flex flex-col">
+          <div className="flex-1">
+            <Sidebar
+              chats={chats}
+              currentChat={currentChat}
+              setCurrentChat={setCurrentChat}
+              onNewChat={() => createNewChat()}
+              onDeleteChat={deleteChat}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -484,6 +516,11 @@ function App() {
           <div className="absolute top-4 right-4 z-40">
             <ProfileDropdown />
           </div>
+          {isGlobalView && (
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-[#6c5dd3] rounded-full text-xs text-white opacity-50">
+              Global View
+            </div>
+          )}
           <ChatArea
             currentChat={currentChat}
             onSendMessage={handleSendMessage}
@@ -493,6 +530,17 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/global" element={<GlobalChats />} />
+      </Routes>
+    </Router>
   );
 }
 
