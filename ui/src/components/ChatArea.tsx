@@ -8,7 +8,19 @@ import {
   Lightbulb, 
   Search,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Briefcase,
+  Cpu,
+  Github,
+  GraduationCap,
+  Sparkles,
+  Terminal,
+  Coffee,
+  Heart,
+  Music,
+  Code2,
+  Gamepad2,
+  Trophy
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Chat } from '../types';
@@ -82,42 +94,69 @@ const ChatMessage: React.FC<{
   const displayContent = expanded ? content : content.slice(0, MESSAGE_THRESHOLD);
 
   return (
-    <div className={cn(
-      "p-6 rounded-lg group",
-      msg.role === 'assistant' && "bg-[#12141c]"
-    )}>
+    <div 
+      className={cn(
+        "p-6 rounded-lg group transform transition-all duration-300 hover:scale-[1.01]",
+        msg.role === 'assistant' && "bg-[#12141c]",
+        "animate-slideIn"
+      )}
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
       <div className="max-w-3xl mx-auto flex gap-4">
         <div className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+          "relative w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 group-hover:scale-110",
           msg.role === 'assistant' ? "bg-[#6c5dd3] text-white" : "bg-[#282c3a] text-white"
         )}>
-          {msg.role === 'user' ? 'U' : 'C'}  {/* Changed to H for Human */}
+          {/* Animated ring effect */}
+          <div className={cn(
+            "absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+            msg.role === 'assistant' ? "bg-[#6c5dd3]" : "bg-[#282c3a]",
+            "animate-ping"
+          )} />
+          {msg.role === 'user' ? 'U' : 'C'}
         </div>
         <div className="flex-1">
           <div className="prose prose-invert max-w-none">
             <ReactMarkdown>{displayContent}</ReactMarkdown>
             {(msg as StreamMessage).isStreaming && (
-              <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+              <div className="flex items-center gap-1 mt-2">
+                <span className="w-2 h-2 bg-[#6c5dd3] rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-[#6c5dd3] rounded-full animate-bounce animation-delay-200" />
+                <span className="w-2 h-2 bg-[#6c5dd3] rounded-full animate-bounce animation-delay-400" />
+              </div>
             )}
           </div>
           {isLongMessage && (
             <button
               onClick={onToggle}
-              className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300"
+              className="flex items-center gap-2 mt-4 text-sm text-gray-400 hover:text-gray-300 transition-colors group/btn"
             >
               {expanded ? (
                 <>
-                  <ChevronUp size={16} />
+                  <ChevronUp size={16} className="transform group-hover/btn:-translate-y-0.5 transition-transform" />
                   Show Less
                 </>
               ) : (
                 <>
-                  <ChevronDown size={16} />
+                  <ChevronDown size={16} className="transform group-hover/btn:translate-y-0.5 transition-transform" />
                   Show More
                 </>
               )}
             </button>
           )}
+          
+          {/* Timestamp and interaction indicators */}
+          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              {new Date().toLocaleTimeString()}
+            </span>
+            {msg.role === 'assistant' && (
+              <div className="flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#6c5dd3] rounded-full" />
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">AI Generated</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -192,47 +231,289 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       <span className="text-3xl font-bold">ChitsGPT</span>
     </div>
   );
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setMessage(e.target.value)
-  // };
-  const EmptyState = () => (
-    <div className="h-full flex flex-col items-center justify-center p-4 md:p-10 -mt-16">
-      <Logo />
-      <h3 className="text-md text-gray-500 mb-12 text-center">
-        <TextGenerateEffect words={words} className="text-sm text-gray-500" />
-      </h3>
-      <div className="w-full max-w-2xl px-4">
-        <div className="relative mb-12">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-          <BackgroundGradient className="rounded-full">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) =>setMessage(e.target.value)}
-              placeholder="Message ChitsGPT..."
-              onKeyDown={handleKeyDown}
-              autoFocus
-              className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
-            /> 
-          </BackgroundGradient>
+
+  const PortfolioBox = ({ icon, title, description, onClick }: { 
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    onClick: () => void;
+  }) => (
+    <div
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all hover:scale-105 cursor-pointer"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity group-hover:opacity-20" />
+      <div className="relative rounded-lg bg-[#12141c] p-6">
+        <div className="inline-block rounded-lg bg-[#6c5dd3] p-3">
+          {icon}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {QuickPrompts.map((prompt, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleQuickPrompt(prompt.prompt)}
-              className="flex flex-col items-center gap-2 p-4 bg-[#12141c] hover:bg-[#282c3a] rounded-lg transition-all border border-[#12141c] group"
-            >
-              <div className="p-2 rounded-lg bg-[#6c5dd3] group-hover:bg-[#6c5dd3] transition-colors">
-                {prompt.icon}
-              </div>
-              <span className="font-medium text-center">{prompt.text}</span>
-              <span className="text-xs text-gray-400 text-center">{prompt.description}</span>
-            </button>
-          ))}
+        <div>
+          <h3 className="text-lg font-semibold text-white group-hover:text-[#6c5dd3] transition-colors">
+            {title}
+          </h3>
+          <p className="mt-1 text-sm text-gray-400">
+            {description}
+          </p>
+        </div>
+        <div className="absolute bottom-6 right-6 transform translate-x-8 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
+          <Sparkles className="h-5 w-5 text-[#6c5dd3]" />
         </div>
       </div>
     </div>
+  );
+
+  const developerInfo = {
+    name: "Chitransh Gour",
+    title: "Full Stack Developer",
+    location: "India",
+    experience: "3+ years",
+    skills: ["React", "Node.js", "TypeScript", "Python", "AWS"],
+    socialLinks: {
+      github: "https://github.com/chitrangcodes",
+      linkedin: "https://linkedin.com/in/chitranshgour",
+      twitter: "https://twitter.com/chitrangcodes"
+    }
+  };
+
+  const StatCard = ({ label, value }: { label: string; value: string }) => (
+    <div className="bg-[#12141c] rounded-lg p-4 border border-[#302c59]">
+      <div className="text-sm text-gray-400">{label}</div>
+      <div className="text-lg font-semibold mt-1">{value}</div>
+    </div>
+  );
+
+  const SkillBadge = ({ skill }: { skill: string }) => (
+    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#6c5dd3] bg-opacity-20 text-[#6c5dd3]">
+      {skill}
+    </span>
+  );
+
+  const FloatingWidget = ({ icon, text, position, delay }: { 
+    icon: React.ReactNode; 
+    text: string;
+    position: string;
+    delay: number;
+  }) => (
+    <div className={`absolute ${position} hidden lg:flex items-center gap-2 p-3 bg-[#1a1c26] rounded-full 
+      transform hover:scale-110 transition-all duration-300 cursor-pointer
+      animate-float`}
+      style={{ animationDelay: `${delay}s` }}
+    >
+      {icon}
+      <span className="text-sm text-gray-400">{text}</span>
+    </div>
+  );
+
+  const ActivityWidget = ({ icon, title, value, color }: {
+    icon: React.ReactNode;
+    title: string;
+    value: string;
+    color: string;
+  }) => (
+    <div className={`absolute hidden lg:block p-4 bg-[#1a1c26] rounded-xl transform hover:scale-105 
+      transition-all duration-300 shadow-lg hover:shadow-${color}/20 cursor-pointer`}>
+      <div className={`p-2 rounded-lg bg-${color} bg-opacity-20 mb-3 w-fit`}>
+        {icon}
+      </div>
+      <div className="text-sm text-gray-400">{title}</div>
+      <div className="text-lg font-semibold mt-1">{value}</div>
+    </div>
+  );
+
+  const funFacts = [
+    "Drinks ☕️ while coding",
+    "Loves 🎮 gaming breaks",
+    "Listens to 🎵 lofi",
+    "Night 🌙 coder",
+    "Bug hunter 🐛"
+  ];
+
+  const EmptyState = () => (
+    <div className="relative h-full flex flex-col items-center justify-center p-4 md:p-10">
+      {/* Floating Widgets */}
+      <FloatingWidget 
+        icon={<Coffee className="h-4 w-4 text-[#6c5dd3]" />} 
+        text="Coffee Driven"
+        position="left-10 top-20"
+        delay={0}
+      />
+      <FloatingWidget 
+        icon={<Heart className="h-4 w-4 text-pink-500" />} 
+        text="Loves Open Source"
+        position="right-10 top-40"
+        delay={0.5}
+      />
+      <FloatingWidget 
+        icon={<Music className="h-4 w-4 text-green-500" />} 
+        text="Coding Playlist"
+        position="left-20 bottom-20"
+        delay={1}
+      />
+      <FloatingWidget 
+        icon={<Code2 className="h-4 w-4 text-yellow-500" />} 
+        text="Clean Code"
+        position="right-20 bottom-40"
+        delay={1.5}
+      />
+
+
+
+      {/* Fun Facts Ticker */}
+      <div className="absolute left-4 top-1/2 hidden lg:block">
+        <div className="bg-[#1a1c26] p-4 rounded-xl">
+          <div className="text-sm text-gray-400 mb-2">Fun Facts</div>
+          <div className="space-y-2">
+            {funFacts.map((fact, idx) => (
+              <div 
+                key={idx}
+                className="text-sm p-2 rounded bg-[#12141c] hover:bg-[#6c5dd3] hover:bg-opacity-20 
+                  transition-all duration-300 cursor-pointer"
+              >
+                {fact}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000" />
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10">
+        {/* Developer Info Widget - Moved to top */}
+        <div className="w-full max-w-4xl px-4 mb-16">
+          <div className="bg-[#1a1c26] rounded-xl p-8 transform hover:scale-[1.02] transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-[#6c5dd3]/10">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+              <div className="relative">
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-[#6c5dd3] to-[#302c59] rounded-full opacity-75 group-hover:opacity-100 animate-tilt transition-all duration-300"></div>
+                <Avatar className="w-24 h-24 relative">
+                  <AvatarImage src="/logo.jpg" />
+                  <AvatarFallback>CG</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-200">
+                  {developerInfo.name}
+                </h2>
+                <p className="text-gray-400 mb-6 text-lg">{developerInfo.title}</p>
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-8">
+                  {developerInfo.skills.map((skill) => (
+                    <SkillBadge key={skill} skill={skill} />
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <StatCard label="Experience" value={developerInfo.experience} />
+                  <StatCard label="Location" value={developerInfo.location} />
+                  <StatCard label="Projects" value="15+" />
+                  <StatCard label="Open Source" value="20+" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Logo and Chat Section */}
+        <div className="mb-12">
+          <Logo />
+          <h3 className="text-md text-gray-500 mt-6 text-center">
+            <TextGenerateEffect words={words} className="text-sm text-gray-500" />
+          </h3>
+        </div>
+
+        <div className="w-full max-w-4xl px-4">
+          <div className="relative mb-16">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+            <BackgroundGradient className="rounded-full">
+              <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Message ChitsGPT..."
+                onKeyDown={handleKeyDown}
+                autoFocus
+                className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
+              /> 
+            </BackgroundGradient>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {QuickPrompts.map((prompt, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleQuickPrompt(prompt.prompt)}
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+                <div className="relative rounded-lg bg-[#12141c] p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
+                      {prompt.icon}
+                    </div>
+                    <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                  </div>
+                  <span className="font-medium text-lg block mb-2">{prompt.text}</span>
+                  <span className="text-sm text-gray-400 block leading-relaxed">{prompt.description}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ChatDecorations = () => (
+    <>
+      {/* Floating Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Top Left */}
+        <div className="absolute top-8 left-8 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float">
+            <Code2 className="h-4 w-4 text-[#6c5dd3]" />
+            <span className="text-xs text-gray-400">Coding in progress...</span>
+          </div>
+        </div>
+
+        {/* Top Right */}
+        <div className="absolute top-16 right-8 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-500">
+            <Coffee className="h-4 w-4 text-yellow-500" />
+            <span className="text-xs text-gray-400">Coffee level: 100%</span>
+          </div>
+        </div>
+
+        {/* Bottom Left */}
+        <div className="absolute bottom-24 left-8 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1000">
+            <Music className="h-4 w-4 text-green-500" />
+            <span className="text-xs text-gray-400">Lofi beats playing</span>
+          </div>
+        </div>
+
+        {/* Bottom Right */}
+        <div className="absolute bottom-32 right-8 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1500">
+            <Heart className="h-4 w-4 text-pink-500" />
+            <span className="text-xs text-gray-400">Built with ❤️</span>
+          </div>
+        </div>
+
+        {/* Animated Background Blobs */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-4000" />
+      </div>
+
+      {/* Corner Decorations */}
+      <div className="fixed top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" />
+      <div className="fixed top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-500 to-transparent opacity-10 pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-500 to-transparent opacity-10 pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" />
+    </>
   );
 
   const toggleMessage = (index: number) => {
@@ -244,6 +525,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0b0f] animate-fade-in animation-delay-500">
+      {currentChat?.messages?.length > 0 && <ChatDecorations />}
       <ScrollArea className="flex-1 px-4 md:px-8 pt-16 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
         {currentChat?.messages?.length ? (
           <div className="mx-auto max-w-4xl space-y-6">

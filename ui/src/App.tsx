@@ -302,7 +302,7 @@ function App() {
     <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative overflow-hidden">
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-[#0a0b0f] rounded-lg hover:bg-[#3A3A3A] transition-colors md:hidden"
+        className="fixed top-4 left-4 z-50 p-2 bg-[#0a0b0f] rounded-lg hover:bg-[#3A3A3A] transition-colors"
         aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}
@@ -310,16 +310,15 @@ function App() {
 
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-20"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed md:static left-0 top-0 h-full w-[280px] z-30 transition-transform duration-300 ease-in-out transform 
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-          md:translate-x-0 md:relative md:min-w-[280px]`}
+        className={`fixed left-0 top-0 h-full w-[280px] z-30 transition-transform duration-300 ease-in-out transform 
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <Sidebar
           chats={chats}
