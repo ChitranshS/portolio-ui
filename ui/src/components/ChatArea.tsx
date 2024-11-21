@@ -321,6 +321,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
               <div className="relative rounded-lg bg-[#12141c] p-8">
+                
                 <div className="flex items-center justify-between mb-6">
                   <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
                     <HelpCircle className="h-5 w-5 text-[#6c5dd3]" />
