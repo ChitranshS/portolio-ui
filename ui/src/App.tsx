@@ -299,34 +299,27 @@ function App() {
 
   return (
     
-    <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative">
+    <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative overflow-hidden">
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-[#0a0b0f] rounded-lg hover:bg-[#3A3A3A] transition-colors"
+        className="fixed top-4 left-4 z-50 p-2 bg-[#0a0b0f] rounded-lg hover:bg-[#3A3A3A] transition-colors md:hidden"
         aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}
       </button>
 
-      {/* <button
-        onClick={fetchMessagesFromDB}
-        className="fixed top-4 right-20 z-50 p-2 bg-[#2A2A2A] rounded-lg hover:bg-[#3A3A3A] transition-colors"
-        aria-label="Refresh messages"
-      >
-        <RefreshCw size={24} />
-      </button> */}
-
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={() => setIsSidebarOpen(true)}
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
+      {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full w-64 z-30 transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed md:static left-0 top-0 h-full w-[280px] z-30 transition-transform duration-300 ease-in-out transform 
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          md:translate-x-0 md:relative md:min-w-[280px]`}
       >
         <Sidebar
           chats={chats}
@@ -338,7 +331,8 @@ function App() {
         />
       </div>
 
-      <div className="flex-1 pl-0">
+      {/* Main Content Area */}
+      <div className="flex-1 relative w-full max-w-full">
         <div className="relative h-full">
           <div className="absolute top-4 right-4 z-40">
             <ProfileDropdown />
