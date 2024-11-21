@@ -196,39 +196,27 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   //   setMessage(e.target.value)
   // };
   const EmptyState = () => (
-    <div className="h-full flex flex-col items-center justify-center mx-10">
+    <div className="h-full flex flex-col items-center justify-center p-4 md:p-10 -mt-16">
       <Logo />
-      {/* <h1 className="text-2xl font-semibold text-gray-300 mb-2">
-        How can I help you today?
-      </h1> */}
-      <h3 className="text-md text-gray-500 mb-8">
-      <TextGenerateEffect words={words} className="text-sm text-gray-500" />
-        
+      <h3 className="text-md text-gray-500 mb-12 text-center">
+        <TextGenerateEffect words={words} className="text-sm text-gray-500" />
       </h3>
-      <div className="w-full max-w-2xl">
-        <div className="relative mb-8">
+      <div className="w-full max-w-2xl px-4">
+        <div className="relative mb-12">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
           <BackgroundGradient className="rounded-full">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) =>setMessage(e.target.value)}
-            placeholder="Message ChitsGPT..."
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
-          /> 
+            <input
+              type="text"
+              value={message}
+              onChange={(e) =>setMessage(e.target.value)}
+              placeholder="Message ChitsGPT..."
+              onKeyDown={handleKeyDown}
+              autoFocus
+              className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
+            /> 
           </BackgroundGradient>
-                {/* <PlaceholdersAndVanishInput
-                  type="text"
-                  value={message}
-                  onChange={handleChange}
-                  placeholders={placeholders}
-                  onKeyDown={handleKeyDown}
-                  autoFocus
-      /> */}
         </div>
-        <div className="grid grid-cols-2 p-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {QuickPrompts.map((prompt, idx) => (
             <button
               key={idx}
@@ -255,10 +243,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen pt-16 pl-64 mr-64 bg-[#0a0b0f] animate-fade-in animation-delay-500">
-      <ScrollArea className="flex-1 px-4 lg:px-8 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
+    <div className="flex flex-col h-screen bg-[#0a0b0f] animate-fade-in animation-delay-500">
+      <ScrollArea className="flex-1 px-4 md:px-8 pt-16 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
         {currentChat?.messages?.length ? (
-          <div className="mx-auto">
+          <div className="mx-auto max-w-4xl space-y-6">
             {currentChat?.messages?.map((msg, idx) => (
               <ChatMessage
                 key={idx}
@@ -288,8 +276,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </ScrollArea>
 
       {currentChat?.messages?.length > 0 && (
-        <div className="border-t border-[#0a0b0f] p-4 bg-[#0a0b0f]">
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+        <div className="border-t border-[#0a0b0f] p-4 bg-[#0a0b0f] w-full">
+          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
             <div className="relative">
               <input
                 type="text"
