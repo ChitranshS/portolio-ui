@@ -214,7 +214,7 @@ function MainApp() {
       
       try {
         const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
-          method: 'POST',
+        method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -446,6 +446,17 @@ function MainApp() {
   };
 
   const createNewChat = async (initialMessage?: string) => {
+    // Check if there's already an empty chat
+    const existingEmptyChat = chats.find(chat => 
+      chat.messages.length === 0 && chat.title === 'New Chat'
+    );
+
+    if (existingEmptyChat && !initialMessage) {
+      // If there's an empty chat and no initial message, just switch to it
+      setCurrentChat(existingEmptyChat);
+      return;
+    }
+
     const threadId = uuidv4();
     const newChat: Chat = {
       id: Date.now(),
@@ -478,7 +489,11 @@ function MainApp() {
     <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative overflow-hidden">
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-[#0a0b0f] rounded-lg hover:bg-[#3A3A3A] transition-colors"
+        className={`fixed top-4 left-4 z-50 p-2 rounded-lg transition-all duration-300 ease-in-out
+          ${isSidebarOpen 
+            ? 'bg-[#0a0b0f] hover:bg-[#3A3A3A]' 
+            : 'bg-[#12141c] hover:bg-[#282c3a]'
+          }`}
         aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}
@@ -486,26 +501,30 @@ function MainApp() {
 
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
+          className={`fixed inset-0 bg-black transition-opacity duration-300 ease-in-out z-20 
+            ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`}
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full w-[280px] z-30 transition-transform duration-300 ease-in-out transform 
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed left-0 top-0 h-full w-[280px] z-30 transition-all duration-300 ease-in-out transform 
+          ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
       >
         <div className="h-full flex flex-col">
           <div className="flex-1">
-            <Sidebar
-              chats={chats}
-              currentChat={currentChat}
-              setCurrentChat={setCurrentChat}
-              onNewChat={() => createNewChat()}
-              onDeleteChat={deleteChat}
-              isLoading={isLoading}
-            />
+            {isSidebarOpen && (
+              <Sidebar
+                chats={chats}
+                currentChat={currentChat}
+                setCurrentChat={setCurrentChat}
+                onNewChat={createNewChat}
+                onDeleteChat={handleDeleteChat}
+                isLoading={isLoading}
+                setIsSidebarOpen={setIsSidebarOpen}
+              />
+            )}
           </div>
         </div>
       </div>
