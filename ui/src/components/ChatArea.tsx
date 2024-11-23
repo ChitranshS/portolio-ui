@@ -461,11 +461,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
       </div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
         <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000" />
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000" />
-      </div>
+      </div> */}
 
       <div className="relative z-10">
           <div className="mb-12">
@@ -549,7 +549,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0b0f] animate-fade-in animation-delay-500">
+    <div className="flex flex-col h-screen bg-transparent animate-fade-in animation-delay-500">
       {currentChat?.messages?.length > 0 && <ChatDecorations />}
       <ScrollArea className="flex-1 px-4 md:px-8 pt-16 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
         {currentChat?.messages?.length ? (
@@ -583,7 +583,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </ScrollArea>
 
       {currentChat?.messages?.length > 0 && (
-        <div className="border-t border-[#0a0b0f] p-4 bg-[#0a0b0f] w-full">
+        <div className="border-t border-[#1a1c26] p-4 bg-[#0a0b0f]/80 backdrop-blur-sm w-full">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
             <div className="relative">
               <input
@@ -591,7 +591,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Message ChitsGPT..."
-                className="w-full p-4 pr-12 bg-[#12141c] rounded-lg border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59]"
+                className="w-full p-4 pr-12 bg-[#12141c]/80 backdrop-blur-sm rounded-lg border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59]"
                 onKeyDown={handleKeyDown}
               />
               <button

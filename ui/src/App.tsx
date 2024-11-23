@@ -12,6 +12,7 @@ import { config } from 'dotenv'
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { threadStorage } from './lib/threadStorage';
 import GlobalChats from './pages/GlobalChats';
+import AnimatedBackground from './components/AnimatedBackground';
 
 function MainApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -172,24 +173,33 @@ function MainApp() {
 
   // Function to check if enough time has passed since last reload
   const shouldSendRandomRequests = (): boolean => {
-    const lastReloadTime = localStorage.getItem('lastReloadTime');
+    const isFirstVisit = localStorage.getItem('hasVisited') === null;
+  
+    // First time website visit - send 5 requests
+    if (isFirstVisit) {
+      localStorage.setItem('hasVisited', 'true');
+      return true;
+    }
+
+    const lastMessageTime = localStorage.getItem('lastMessageTime');
+    // If no messages yet, don't send requests
+    if (!lastMessageTime) {
+      console.log('⏳ Waiting for first message before sending random requests');
+      return false;
+    }
+
+    // Check if 4 minutes have passed since last message
     const currentTime = Date.now();
-    const fiveMinutesInMs = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const fourMinutesInMs = 4 * 60 * 1000; // 4 minutes in milliseconds
+    const timeSinceLastMessage = currentTime - parseInt(lastMessageTime);
 
-    if (!lastReloadTime) {
-      localStorage.setItem('lastReloadTime', currentTime.toString());
+    if (timeSinceLastMessage >= fourMinutesInMs) {
       return true;
     }
 
-    const timeDifference = currentTime - parseInt(lastReloadTime);
-    if (timeDifference >= fiveMinutesInMs) {
-      localStorage.setItem('lastReloadTime', currentTime.toString());
-      return true;
-    }
-
-    console.log('⏳ Skipping random requests - Less than 5 minutes since last reload', {
-      lastReload: new Date(parseInt(lastReloadTime)).toLocaleString(),
-      timeUntilNextEligible: `${((fiveMinutesInMs - timeDifference) / 1000 / 60).toFixed(2)} minutes`
+    console.log('⏳ Skipping random requests', {
+      lastMessage: new Date(parseInt(lastMessageTime)).toLocaleString(),
+      timeUntilNextEligible: `${((fourMinutesInMs - timeSinceLastMessage) / 1000 / 60).toFixed(2)} minutes`
     });
     return false;
   };
@@ -197,22 +207,23 @@ function MainApp() {
   // Function to send random requests
   const sendRandomRequests = async () => {
     const sharedThreadId = 'pinging_123';
-    console.log('%c📡 Starting Random Requests Sequence', 'background: #4b0082; color: white; font-size: 14px; padding: 8px; border-radius: 5px;');
+    console.log('%c📡 Starting Random Requests Sequence', 'color: #4b0082; font-size: 14px; border-radius: 5px;');
     console.log({
       threadId: sharedThreadId,
-      totalRequests: 5,
+      totalRequests: 3,
       startTime: new Date().toLocaleString()
     });
     
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       const requestId = uuidv4();
-      console.log('%c🔄 Request ' + (i + 1) + '/5', 'color: #ffa500; font-weight: bold;', {
+      console.log('%c🔄 Request ' + (i + 1) + '/3', 'color: #ffa500; font-weight: bold;', {
         requestId,
         threadId: sharedThreadId,
         timestamp: new Date().toLocaleString()
       });
       
       try {
+        // const response = await fetch('http://localhost:8000/chat', {
         const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
         method: 'POST',
           headers: {
@@ -251,7 +262,7 @@ function MainApp() {
       }
     }
     
-    console.log('%c🎉 Random Requests Sequence Completed', 'background: #4b0082; color: white; font-size: 14px; padding: 8px; border-radius: 5px;');
+    console.log('%c🎉 Random Requests Sequence Completed', 'color: #4b0082; font-size: 14px;border-radius: 5px;',);
     console.log({
       threadId: sharedThreadId,
       completionTime: new Date().toLocaleString(),
@@ -262,7 +273,7 @@ function MainApp() {
   useEffect(() => {
     fetchMessagesFromDB();
     if (shouldSendRandomRequests()) {
-      console.log('%c⚡ Sending 5 Random Requests ⚡', 'background: #ffa500; color: black; font-size: 14px; padding: 8px; border-radius: 5px;');
+      console.log('%c⚡ Sending 3 Random Requests ⚡', 'color: #ffa500; font-size: 14px; border-radius: 5px;');
       sendRandomRequests();
     }
   }, []);
@@ -286,6 +297,9 @@ function MainApp() {
     if (isLoading) return;
     
     try {
+      // Update lastMessageTime in localStorage
+      localStorage.setItem('lastMessageTime', Date.now().toString());
+      
       const activeChat = chatToUse || currentChat || {
         id: Date.now(),
         threadId: uuidv4(),
@@ -328,6 +342,7 @@ function MainApp() {
       setCurrentChat(chatWithAssistant);
   
       try {
+        // const response = await fetch('http://localhost:8000/chat', {
         const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
           method: 'POST',
           headers: {
@@ -486,66 +501,69 @@ function MainApp() {
   };
 
   return (
-    <div className="h-screen flex bg-[#0a0b0f] text-gray-100 relative overflow-hidden">
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className={`fixed top-4 left-4 z-50 p-2 rounded-lg transition-all duration-300 ease-in-out
-          ${isSidebarOpen 
-            ? 'bg-[#0a0b0f] hover:bg-[#3A3A3A]' 
-            : 'bg-[#12141c] hover:bg-[#282c3a]'
-          }`}
-        aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-      >
-        {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}
-      </button>
+    <div className="relative min-h-screen bg-transparent">
+      {/* <AnimatedBackground /> */}
+      <div className="relative z-10 h-screen flex text-gray-100 overflow-hidden bg-transparent">
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className={`fixed top-4 left-4 z-50 p-2 rounded-lg transition-all duration-300 ease-in-out
+            ${isSidebarOpen 
+              ? 'bg-[#0a0b0f] hover:bg-[#3A3A3A]' 
+              : 'bg-[#12141c] hover:bg-[#282c3a]'
+            }`}
+          aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+        >
+          {isSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeft size={24} />}
+        </button>
 
-      {isSidebarOpen && (
+        {isSidebarOpen && (
+          <div
+            className={`fixed inset-0 bg-black transition-opacity duration-300 ease-in-out z-20 
+              ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar */}
         <div
-          className={`fixed inset-0 bg-black transition-opacity duration-300 ease-in-out z-20 
-            ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`}
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div
-        className={`fixed left-0 top-0 h-full w-[280px] z-30 transition-all duration-300 ease-in-out transform 
-          ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
-      >
-        <div className="h-full flex flex-col">
-          <div className="flex-1">
-            {isSidebarOpen && (
-              <Sidebar
-                chats={chats}
-                currentChat={currentChat}
-                setCurrentChat={setCurrentChat}
-                onNewChat={createNewChat}
-                onDeleteChat={handleDeleteChat}
-                isLoading={isLoading}
-                setIsSidebarOpen={setIsSidebarOpen}
-              />
-            )}
+          className={`fixed left-0 top-0 h-full w-[280px] z-30 transition-all duration-300 ease-in-out transform 
+            ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}
+        >
+          <div className="h-full flex flex-col">
+            <div className="flex-1">
+              {isSidebarOpen && (
+                <Sidebar
+                  chats={chats}
+                  currentChat={currentChat}
+                  setCurrentChat={setCurrentChat}
+                  onNewChat={createNewChat}
+                  onDeleteChat={handleDeleteChat}
+                  isLoading={isLoading}
+                  setIsSidebarOpen={setIsSidebarOpen}
+                />
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 relative w-full max-w-full">
-        <div className="relative h-full">
-          <div className="absolute top-4 right-4 z-40">
-            <ProfileDropdown />
-          </div>
-          {isGlobalView && (
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-[#6c5dd3] rounded-full text-xs text-white opacity-50">
-              Global View
+        {/* Main Content Area */}
+        <div className="flex-1 relative w-full max-w-full">
+          <div className="relative h-full">
+            <div className="absolute top-4 right-4 z-40">
+              <ProfileDropdown />
             </div>
-          )}
-          <ChatArea
-            currentChat={currentChat}
-            onSendMessage={handleSendMessage}
-            createNewChat={createNewChat}
-            isLoading={isLoading}
-          />
+            {isGlobalView && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-[#6c5dd3] rounded-full text-xs text-white opacity-50">
+                Global View
+              </div>
+            )}
+            <ChatArea
+              currentChat={currentChat}
+              onSendMessage={handleSendMessage}
+              createNewChat={createNewChat}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
       </div>
     </div>

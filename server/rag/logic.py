@@ -24,79 +24,106 @@ def query_handler(data_obj):
     try:
         # query_embeddings = generate_embeddings(query)
         RESUME = """
-        Chitransh Srivastava
-        chitransh0210@gmail.com | LinkedIn | Github | Twitter | +91-8920692261
-        Education
-        • Ramaiah Institute of Technology Bengaluru, Karnataka
-        B.E. (Artificial Intelligence and Machine Learning) CGPA: 8.32 Expected Graduation: 2025
-        • Courses Undertaken: Data Structures, Design and Analysis of Algorithms, Introduction to Artificial Intelligence,
-        Introduction to Machine Learning, Data Communication and Networking, Introduction to Data Science, Soft Computing,
-        Natural Language Processing, Deep Learning.
-        Experience
-        • GoMarble.ai — Data Science Intern (Bengaluru) May ’24 - Current
-        ◦ ∗ Deployed LLMs on cloud platforms, implementing AWS Lambda functions, S3, Bedrock, and SageMaker for
-        seamless data processing and model deployment.
-        ∗ Engineered collaborative AI systems using LangChain & Langraph, developing agentic workflow architectures for
-        innovative lead generation solutions and multi-agent systems.
-        ∗ Implemented Retrieval-Augmented Generation (RAG) systems to enhance LLM performance with external
-        knowledge.
-        ∗ Developed an advanced lead emailing system using Mixture of Agents (MoA) techniques, integrating multiple
-        state-of-the-art open-source LLMs.
-        • Larsen & Toubro Defence— Machine Learning Intern (Remote) Feb ’24 - Aug ’24
-        ◦ Predictive Maintenance System for Propulsion Systems:
-        ∗ Conducted a detailed requirement analysis for predictive maintenance in propulsion systems, studying operational
-        parameters, failure modes, and maintenance needs.
-        ∗ Executed data cleaning and preprocessing workflows, applying some techniques like Random Forests, Gradient
-        Boosting Machines (GBM), and time-series analysis for predictive maintenance. This enabled accurate prediction of
-        equipment failures and optimization of maintenance schedules, improving operational efficiency.
-        ∗ Designed a comprehensive data collection framework with integrated sensors and data logging.
-        Projects
-        • InsightifySeven: AI-Web Extension for YouTube:
-        ◦ Leveraged React components to create a seamless and dynamic user experience in the web extension, achieving a
-        remarkable 94% accuracy in transcribing videos across 30+ languages and extracting comments from 95% of
-        YouTube videos, coupled with sentiment analysis to visualize user sentiments on a 0-100% scale.
-        ◦ Deployed topic modeling to identify 6-14 topics with 85% coherence, generated summaries with 70% length
-        reduction and 88% coherence, and performed 1-hour video analysis in 3 minutes with comprehensive insights.
-        • ClipSurf Project: AI-Driven Video Content Discovery Engine:
-        ◦ Utilized Next.js alongside Neon Postgres DB and Prisma as the ORM for robust data management. Authentication
-        was seamlessly handled through OAuth, while user session management leveraged industry-standard practices such
-        as JWT (JSON Web Tokens) and secure cookie-based sessions for enhanced security and scalability.
-        ◦ Implemented advanced NLP methodologies, including topic modeling and Latent Dirichlet Allocation (LDA),
-        enabling the platform to process and analyze over 400 paragraph-length queries per day, extracting accurate
-        keywords for video content search.
-        ◦ Successfully integrated with different video platform APIs, achieving a curated content retrieval success rate of 95%
-        within seconds, significantly enhancing user experience by providing relevant and diverse video content.
-        Research Work & Certifications
-        • Performance Analysis of Various DL Models in Lung Cancer Detection...— Under Progress ()
-        • Natural Language Processing for developers— Infosys Springboard (November - December 2023)
-        Skills
-        • Programming Languages: Python, C++, JavaScript, Node.js, Express.js, React, SQL
-        • Frameworks and Technologies: Flask, Scikit-Learn, TensorFlow, NLTK, SpaCy, Gensim, OpenCV, LangChain,
-        AWS EC2, AWS Lambda, GCP Apprunner, Cloudflare Workers, Docker, FastAPI, Keras, Streamlit, Apache Spark,
-        Airflow, Redux, Next.js
-        • Version Control: Git, GitHub, Gitpod
-        • Machine Learning and AI: Natural Language Processing (NLP), Computer Vision, Deep Learning with TensorFlow
-        and Keras, Time-Series Analysis
-        • Software Development Practices: Microservices architecture, CI/CD pipelines with Kafka, Containerization with
-        Docker and Kubernetes, Serverless architecture
-        • Databases: PostgreSQL, MongoDB, MySQL, Redis
-        • Operating Systems: Linux Systems (Ubuntu, CentOS), Windows
-        • Mathematics: Linear Algebra, Statistics, Probability, Calculus
-        Extra Curricular
-        • Photographer: iClick: Photography Club, Ramaiah Institute of Technology.
-        • Graphic Designer: TEDxMSRIT, Ramaiah Institute of Technology.
-        • NSS Member: Member & Volunteer, Ramaiah Institute of Technology.
-        Link: mailto:chitransh0210@gmail.com
+            ---
+
+            **Chitransh Srivastava**  
+            chitransh0210@gmail.com | [LinkedIn](#) | [GitHub](https://github.com/ChitranshS) | [Twitter](https://twitter.com/chtzzzzzex) | +91-8920692261  
+
+            ---
+
+            ### **Education**  
+            - **Ramaiah Institute of Technology, Bengaluru, Karnataka**  
+            - **B.E. (Artificial Intelligence and Machine Learning)**  
+            - CGPA: 8.32 | Expected Graduation: 2025  
+            - **Courses Undertaken**: Data Structures, Design and Analysis of Algorithms, Introduction to Artificial Intelligence, Introduction to Machine Learning, Data Communication and Networking, Introduction to Data Science, Soft Computing, Natural Language Processing, Deep Learning  
+
+            ---
+
+            ### **Experience**  
+            #### **GoMarble.ai** — Data Science Intern  
+            **May ’24 - Nov ’24**  
+            - Deployed LLMs on cloud platforms, leveraging AWS Lambda, S3, Bedrock, and SageMaker for efficient model deployment and data processing.  
+            - Engineered collaborative AI systems with LangChain & LangGraph, creating agentic workflow architectures for multi-agent systems and innovative lead generation solutions.  
+            - Designed Retrieval-Augmented Generation (RAG) systems to improve LLM performance using external data.  
+            - Developed an advanced lead emailing system with Mixture of Agents (MoA) techniques, integrating multiple state-of-the-art open-source LLMs.  
+
+            #### **Larsen & Toubro Defence** — Machine Learning Intern  
+            **Feb ’24 - Aug ’24**  
+            - Built a predictive maintenance system for propulsion systems using Random Forests, Gradient Boosting Machines (GBM), and time-series analysis.  
+            - Conducted detailed requirement analysis for operational parameters and maintenance needs, leading to enhanced equipment failure prediction and optimization of schedules.  
+            - Designed data collection frameworks with integrated sensors and data logging mechanisms.  
+
+            ---
+
+            ### **Projects**  
+            #### **ChitsGPT: Smart Resume Assistant**  
+            - Developed an interactive chatbot using React and TypeScript frontend, combined with a FastAPI backend, enabling precise and context-aware resume querying via LangChain and LangGraph.  
+            - Deployed on Google Cloud Run with CI/CD pipelines via Cloud Build, ensuring scalability and high availability.  
+
+            #### **ClipSurf: AI-Driven Video Content Discovery Engine**  
+            - Utilized Next.js with Neon Postgres DB and Prisma ORM for efficient data management.  
+            - Implemented advanced NLP techniques such as LDA for topic modeling, processing 400+ queries daily.  
+            - Achieved a 95% success rate in curated content retrieval using video platform APIs, significantly enhancing the user experience.  
+
+            #### **SummaView: AI-Web Extension for YouTube**  
+            - Built a React-based extension offering transcription, sentiment analysis, and topic modeling for YouTube videos, achieving 94% transcription accuracy across 30+ languages.  
+            - Reduced video summary lengths by 70% while maintaining 88% coherence, providing insights within seconds.  
+
+            ### **Research Work & Certifications**  
+            - **Performance Analysis of Various DL Models in Lung Cancer Detection** — Under Progress (2024)  
+            - **Natural Language Processing for Developers** — Infosys Springboard (2023)  
+
+            ---
+
+            ### **Skills**  
+            #### **Programming Languages**  
+            Python, C++, JavaScript, Node.js, SQL  
+
+            #### **Frameworks & Technologies**  
+            Flask, TensorFlow, LangChain, React, NLTK, Gensim, FastAPI, Streamlit, Keras  
+
+            #### **Cloud & DevOps**  
+            AWS (Lambda, EC2, Bedrock, SageMaker), GCP (AppRunner, Cloud Build), Docker, Kubernetes, Cloudflare Workers, CI/CD  
+
+            #### **Machine Learning & AI**  
+            Natural Language Processing (NLP), Computer Vision, Deep Learning, RAG Systems, AI Agents, Time-Series Analysis  
+
+            #### **Software Development**  
+            Microservices architecture, Serverless computing, Containerization with Docker and Kubernetes, CI/CD pipelines  
+
+            #### **Databases**  
+            PostgreSQL, MongoDB, MySQL, Neon, Redis, Vector Databases  
+
+            #### **Others**  
+            Git, GitHub, Linux Systems (Ubuntu, CentOS), Linear Algebra, Statistics, Probability, Calculus  
+
+            ---
+
+            ### **Extra-Curricular Activities**  
+            - **Photographer**: iClick - Photography Club, Ramaiah Institute of Technology  
+            - **Graphic Designer**: TEDxMSRIT, Ramaiah Institute of Technology  
+            - **NSS Member**: Member & Volunteer, Ramaiah Institute of Technology  
+
+            ---  
+
+                    Link: mailto:chitransh0210@gmail.com
         Link: https://www.linkedin.com/in/chitransh-srivastava-37b0a0225/
         Link: https://github.com/ChitranshS
         Link: https://twitter.com/chtzzzzzex
         Link: https://github.com/ChitranshS/SummaView-Youtube-Extension/tree/main
         Link: https://clip-surf.vercel.app 
+        Link(chitsgpt): https://chat-ui-242842293866.asia-south1.run.app/ 
 
 
         Project Details:
         The SummaView YouTube Extension enhances the YouTube experience by offering video summarization, transcript extraction, and comment sentiment analysis, providing users with a quick grasp of video content and community reactions. Built with NLP tools like spaCy, NLTK, and Gensim, it generates summaries and sentiment scores, helping users bypass lengthy videos and comment sections while still accessing valuable insights.
         Additionally, the extension includes topic modeling, which identifies trending subjects in comments, offering content creators and viewers a clear view of audience interests. Its intuitive UI, built with JavaScript and CSS, integrates these tools directly into YouTube, allowing easy access to data without disrupting the viewing experience.
+        
+        Project Details:
+        Clipsurf is a video content platform which performs search across platforms to find the most suited video for your requirement and the entered request. (Elaborate from resume)
+        
+        Project Details:
+        ChitsGPT is a smart resume assistant which answers your questions based on my resume (Elaborate from resume)
         
         Things I have worked with and know in detail:
         OpenAI APIs
@@ -176,6 +203,7 @@ def query_handler(data_obj):
                 - Keep responses authentic and professionally engaging
                 - Use emojis where appropriate.
                 - When mentioning a project or github repo, provide a link to it.
+                - You have to greet the user using my name on the first message.
                 - You have to return the output strictly in markdown format. The markdown also should highlight the important information in the resume.It should also be structured in a way that is easy to read and understand.
                 - If the user is asking for information in detail then only give long responses else keep them short to improve the user experience and conversation. 
         """

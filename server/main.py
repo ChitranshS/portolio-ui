@@ -6,9 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware  # Add this import
 from dotenv import load_dotenv
 import os
 from rag.logic import query_handler
-from utils.postgres import connection_pool
+from utils.postgres import connection_pool, get_connection, cleanup_pool
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from utils.postgres import startup_event , cleanup_pool
+import logging
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 
@@ -24,21 +27,14 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Initialize database connection pool
-@app.on_event("startup")
-async def startup_event():
-    # Test database connection on startup
-    try:
-        with connection_pool.connection() as conn:
-            conn.execute("SELECT 1")
-        print("Database connection pool initialized successfully")
-    except Exception as e:
-        print(f"Failed to initialize database connection pool: {e}")
-        raise
+#@app.on_event("startup")
+async def startup():
+    await startup_event()
 
 @app.on_event("shutdown")
-async def shutdown_event():
-    connection_pool.close()
+async def shutdown():
+    cleanup_pool()
+
 @app.post("/chat")
 async def handle_chat(request: Request):
     handler = None
@@ -120,5 +116,3 @@ async def health():
 # if __name__ == "__main__":
 #     import uvicorn
 #     uvicorn.run("main:app", reload=True, host="0.0.0.0", port=8000)
-
-

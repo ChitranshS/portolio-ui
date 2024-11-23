@@ -7,7 +7,10 @@ module.exports = {
       animation: {
         'fadeIn': 'fadeIn 0.3s ease-in',
         'slideIn': 'slideIn 0.3s ease-out',
-        shimmer: "shimmer 2s linear infinite"
+        shimmer: "shimmer 2s linear infinite",
+        'float': 'float 20s ease-in-out infinite',
+        'float-delay': 'float 25s ease-in-out infinite reverse',
+        'blob': 'blob 10s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -21,7 +24,24 @@ module.exports = {
         shimmer: {
           from: { transform: 'translateX(-100%)' },
           to: { transform: 'translateX(100%)' }
-        }
+        },
+        float: {
+          '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+          '25%': { transform: 'translate(10px, -10px) rotate(2deg)' },
+          '50%': { transform: 'translate(-5px, 5px) rotate(-1deg)' },
+          '75%': { transform: 'translate(-10px, -5px) rotate(1deg)' },
+        },
+        blob: {
+          '0%, 100%': {
+            transform: 'translate(0, 0) scale(1)',
+          },
+          '33%': {
+            transform: 'translate(30px, -50px) scale(1.1)',
+          },
+          '66%': {
+            transform: 'translate(-20px, 20px) scale(0.9)',
+          },
+        },
       },
       fontFamily: {
         sans: ['Inter var', 'Inter', 'system-ui', 'sans-serif'],
