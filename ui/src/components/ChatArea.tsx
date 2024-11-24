@@ -32,6 +32,7 @@ import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import DevelopersSection from './DeveloperSection';
 import PromptNav from './PromptNav';
+import ChatInput from './ChatInput';
 const words = `Ask me anything about Chitransh's professional background and projects`
 interface ChatAreaProps {
   currentChat: Chat | null;
@@ -53,7 +54,7 @@ const QuickPrompts = [
   { 
     icon: <Code size={20} />, 
     text: "Skills & Expertise", 
-    description: "Technical and soft skills     " ,
+    description: "Discuss technical and soft skills     " ,
     prompt: "Tell me about your skills and expertise"
   },
   { 
@@ -65,7 +66,7 @@ const QuickPrompts = [
   { 
     icon: <Lightbulb size={20} />, 
     text: "GitHub Portfolio", 
-    description: "Browse my code repositories",
+    description: "Browse through my code repositories",
     prompt: "Tell me about your GitHub portfolio"
   },
   { 
@@ -81,7 +82,8 @@ const ChatMessage: React.FC<{
   index: number;
   expanded: boolean;
   onToggle: () => void;
-}> = ({ msg, index, expanded, onToggle }) => {
+  isFirstAssistantMessage?: boolean;
+}> = ({ msg, index, expanded, onToggle, isFirstAssistantMessage }) => {
   const content = msg.content || '';
   const isLongMessage = content.length > MESSAGE_THRESHOLD;
   const displayContent = expanded ? content : content.slice(0, MESSAGE_THRESHOLD);
@@ -97,7 +99,7 @@ const ChatMessage: React.FC<{
     >
       <div className="max-w-3xl mx-auto flex gap-4">
         <div className={cn(
-          "relative w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 group-hover:scale-110",
+          "relative w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300",
           msg.role === 'assistant' ? "bg-[#6c5dd3] text-white" : "bg-[#282c3a] text-white"
         )}>
           <div className={cn(
@@ -109,7 +111,15 @@ const ChatMessage: React.FC<{
         </div>
         <div className="flex-1">
           <div className="prose prose-invert max-w-none">
-            <ReactMarkdown>{displayContent}</ReactMarkdown>
+            {content ? (
+              <ReactMarkdown>{displayContent}</ReactMarkdown>
+            ) : (msg.role === 'assistant' && isFirstAssistantMessage) && (
+              <div className="text-gray-500">
+                <div className="bg-[#1a1c26] rounded-lg p-2 mb-2 animate-fade-in">
+                  <p>The first message may take a moment due to cold start. Thank you for your patience!</p>
+                </div>
+              </div>
+            )}
             {(msg as StreamMessage).isStreaming && (
               <div className="flex items-center gap-1 mt-2">
                 <span className="w-2 h-2 bg-[#6c5dd3] rounded-full animate-bounce" />
@@ -139,13 +149,19 @@ const ChatMessage: React.FC<{
           
           {/* Timestamp and interaction indicators */}
           <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">
               {new Date().toLocaleTimeString()}
             </span>
             {msg.role === 'assistant' && (
               <div className="flex items-center gap-1">
                 <span className="w-1 h-1 bg-[#6c5dd3] rounded-full" />
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">AI Generated</span>
+                <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">Chitransh</span>
+              </div>
+            )}
+             {msg.role === 'user' && (
+              <div className="flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#6c5dd3] rounded-full" />
+                <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">You</span>
               </div>
             )}
           </div>
@@ -163,9 +179,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   isLoading = false
 }) => {
   
-  const [message, setMessage] = useState('');
   const [expandedMessages, setExpandedMessages] = useState<ExpandedMessages>({});
   const [activeSection, setActiveSection] = useState('quick'); 
+  const [showColdStartHint, setShowColdStartHint] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -176,44 +192,19 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     scrollToBottom();
   }, [currentChat?.messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const messageText = message.trim();
-    if (!messageText || isLoading) return;
-    
-    setMessage('');
-    
-    try {
-      if (!currentChat) {
-        createNewChat(messageText);
-      } else {
-        onSendMessage(messageText);
-      }
-    } catch (error) {
-      console.error('Error in handleSubmit:', error);
+  useEffect(() => {
+    if (isLoading) {
+      setShowColdStartHint(true);
+      const timer = setTimeout(() => setShowColdStartHint(false), 8000);
+      return () => clearTimeout(timer);
     }
-  };
-  
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleSubmit(e as any);
-    }
-  };
+  }, [isLoading]);
 
-  const handleQuickPrompt = async (promptText: string) => {
-    try {
-      if (!currentChat) {
-        createNewChat(promptText);
-      } else {
-        onSendMessage(promptText);
-      }
-    } catch (error) {
-      console.error('Error in handleQuickPrompt:', error);
-    }
+  const toggleMessage = (index: number) => {
+    setExpandedMessages(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
   const Logo = () => (
@@ -226,34 +217,16 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     </div>
   );
 
-
-  const developerInfo = {
-    name: "Chitransh Srivastava",
-    location: "India",
-    skills: ["React", "Node.js", "TypeScript", "Python", "AWS"],
-    socialLinks: {
-      github: "https://github.com/chitrangcodes",
-      linkedin: "https://linkedin.com/in/chitranshgour",
-      twitter: "https://twitter.com/chitrangcodes"
-    }
-  };
-
-
-  const SkillBadge = ({ skill }: { skill: string }) => (
-    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#6c5dd3] bg-opacity-20 text-[#6c5dd3]">
-      {skill}
-    </span>
-  );
-
   const FloatingWidget = ({ icon, text, position, delay }: { 
     icon: React.ReactNode; 
     text: string;
     position: string;
     delay: number;
   }) => (
-    <div className={`absolute ${position} hidden lg:flex items-center gap-2 p-3 bg-[#1a1c26] rounded-full 
-      transform hover:scale-110 transition-all duration-300 cursor-pointer
-      animate-float`}
+    <div className={`absolute ${position} hidden lg:flex items-center gap-2 p-3 bg-[#1a1c26] opacity-60 rounded-full 
+      transform hover:scale-110 hover:opacity-100 transition-all duration-300 cursor-pointer
+      animate-float
+    `}
       style={{ animationDelay: `${delay}s` }}
     >
       {icon}
@@ -269,6 +242,54 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     "Bug hunter 🐛"
   ];
 
+  const positionHistory = {
+    positions: [],
+    maxSize: 6,
+  
+    add: (position) => {
+      if (positionHistory.positions.length >= positionHistory.maxSize) {
+        positionHistory.positions.shift();
+      }
+      positionHistory.positions.push(position);
+    }
+  };
+  
+  const getRandomPosition = () => {
+    // Helper function to generate random even number between 1 and 10
+    const getRandomSmallEven = () => {
+      const evens = [2, 4, 6, 8, 10];
+      return evens[Math.floor(Math.random() * evens.length)];
+    };
+  
+    // Helper function to generate random number divisible by 20 (less than 100)
+    const getRandomDivisibleByTwenty = () => {
+      const values = [20, 40, 60, 80];
+      return values[Math.floor(Math.random() * values.length)];
+    };
+  
+    // Helper function to get random value following our rules
+    const getRandomValue = () => {
+      // 20% chance for small even numbers, 80% chance for numbers divisible by 20
+      return Math.random() < 0.2 
+        ? getRandomSmallEven()
+        : getRandomDivisibleByTwenty();
+    };
+  
+    let side = Math.random() > 0.5 ? 'left' : 'right';
+    let vertical = Math.random() > 0.5 ? 'top' : 'bottom';
+    
+    let x, y;
+    do {
+      x = getRandomValue();
+      y = getRandomValue();
+    } while (vertical === 'top' && y === 60 && side === 'right' && x === 80); // Avoid forbidden combination
+  
+    const newPosition = { x, y };
+    positionHistory.add(newPosition);
+    
+    return `${side}-${newPosition.x} ${vertical}-${newPosition.y}`;
+  };
+
   const renderSection = () => {
     switch (activeSection) {
       case 'quick':
@@ -277,7 +298,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             {QuickPrompts.map((prompt, idx) => (
               <button
                 key={idx}
-                onClick={() => handleQuickPrompt(prompt.prompt)}
+                onClick={() => {
+                  if (!currentChat) {
+                    createNewChat(prompt.prompt);
+                  } else {
+                    onSendMessage(prompt.prompt);
+                  }
+                }}
                 className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
@@ -299,7 +326,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
             <button
-              onClick={() => handleQuickPrompt("Let's play a word guessing game!")}
+              onClick={() => {
+                if (!currentChat) {
+                  createNewChat("Let's play a word guessing game!");
+                } else {
+                  onSendMessage("Let's play a word guessing game!");
+                }
+              }}
               className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
@@ -316,7 +349,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             </button>
 
             <button
-              onClick={() => handleQuickPrompt("Let's play 20 questions!")}
+              onClick={() => {
+                if (!currentChat) {
+                  createNewChat("Let's play 20 questions!");
+                } else {
+                  onSendMessage("Let's play 20 questions!");
+                }
+              }}
               className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
@@ -333,7 +372,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             </button>
 
             <button
-              onClick={() => handleQuickPrompt("Let's play a riddle game!")}
+              onClick={() => {
+                if (!currentChat) {
+                  createNewChat("Let's play a riddle game!");
+                } else {
+                  onSendMessage("Let's play a riddle game!");
+                }
+              }}
               className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
@@ -360,7 +405,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
             <button
-              onClick={() => handleQuickPrompt("Tell me about your professional experience and skills")}
+              onClick={() => {
+                if (!currentChat) {
+                  createNewChat("Tell me about your professional experience and skills");
+                } else {
+                  onSendMessage("Tell me about your professional experience and skills");
+                }
+              }}
               className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
@@ -377,7 +428,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             </button>
 
             <button
-              onClick={() => handleQuickPrompt("What projects have you worked on?")}
+              onClick={() => {
+                if (!currentChat) {
+                  createNewChat("What projects have you worked on?");
+                } else {
+                  onSendMessage("What projects have you worked on?");
+                }
+              }}
               className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
@@ -394,7 +451,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             </button>
 
             <button
-              onClick={() => handleQuickPrompt("What are your technical skills and expertise?")}
+              onClick={() => {
+                if (!currentChat) {
+                  createNewChat("What are your technical skills and expertise?");
+                } else {
+                  onSendMessage("What are your technical skills and expertise?");
+                }
+              }}
               className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
@@ -419,28 +482,58 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const EmptyState = () => (
     <div className="relative h-full flex flex-col items-center justify-center p-4 md:p-10">
       <FloatingWidget 
-        icon={<Coffee className="h-4 w-4 text-[#6c5dd3]" />} 
+        icon={<Coffee className="h-4 w-4 text-amber-500" />} 
         text="Coffee Driven"
-        position="left-10 top-20"
+        position="bottom-20 left-40"
         delay={0}
       />
       <FloatingWidget 
         icon={<Heart className="h-4 w-4 text-pink-500" />} 
         text="Loves Open Source"
-        position="right-10 top-40"
-        delay={0.5}
+        position={getRandomPosition()}
+        delay={0.3}
+      />
+      <FloatingWidget 
+        icon={<Cpu className="h-4 w-4 text-purple-500" />} 
+        text="AI Enthusiast"
+        position={getRandomPosition()}
+        delay={0.6}
+      />
+      <FloatingWidget 
+        icon={<Puzzle className="h-4 w-4 text-blue-500" />} 
+        text="Algorithm Lover"
+        position={getRandomPosition()}
+        delay={0.9}
+      />
+      <FloatingWidget 
+        icon={<Code2 className="h-4 w-4 text-emerald-500" />} 
+        text="Clean Code"
+        position={getRandomPosition()}
+        delay={1.2}
+      />
+      <FloatingWidget 
+        icon={<Briefcase className="h-4 w-4 text-indigo-500" />} 
+        text="Full Stack Dev"
+        position={getRandomPosition()}
+        delay={1.5}
+      />
+      <FloatingWidget 
+        icon={<HelpCircle className="h-4 w-4 text-orange-500" />} 
+        text="Problem Solver"
+        position={getRandomPosition()}
+        delay={1.8}
       />
       <FloatingWidget 
         icon={<Music className="h-4 w-4 text-green-500" />} 
         text="Coding Playlist"
-        position="left-20 bottom-20"
-        delay={1}
+        position={getRandomPosition()}
+        delay={2.1}
       />
       <FloatingWidget 
-        icon={<Code2 className="h-4 w-4 text-yellow-500" />} 
-        text="Clean Code"
-        position="right-20 bottom-40"
-        delay={1.5}
+        icon={<Gamepad2 className="h-4 w-4 text-red-500" />} 
+        text="Gaming Enthusiast"
+        position={getRandomPosition()}
+        delay={2.4}
       />
 
       <div className="absolute left-4 top-1/2 hidden lg:block">
@@ -468,25 +561,26 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </div> */}
 
       <div className="relative z-10">
-          <div className="mb-12">
-          <Logo />
-          <h3 className="text-md text-gray-500 mt-6 text-center">
-            <TextGenerateEffect words={words} className="text-sm text-gray-500" />
-          </h3>
-        </div>
-        <div className="w-full max-w-4xl px-4">
+  <div className="mb-12">
+    <Logo />
+    <h3 className="text-md text-gray-500 mt-6 text-center">
+      <TextGenerateEffect words={words} className="text-sm text-gray-500" />
+    </h3>
+  </div>
+  <div className="w-full max-w-4xl px-4">
     <div className="relative mb-16">
       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
       <BackgroundGradient className="rounded-full">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Message ChitsGPT..."
-          onKeyDown={handleKeyDown}
-          autoFocus
-          className="w-full p-4 pl-12 pr-12 bg-[#12141c] placeholder-gray-700 rounded-full border border-[#302c59] focus:outline-none focus:ring-0 focus:ring-[#302c59] focus:border-transparent text-md"
-        /> 
+        <ChatInput 
+          onSendMessage={(messageText) => {
+            if (!currentChat) {
+              createNewChat(messageText);
+            } else {
+              onSendMessage(messageText);
+            }
+          }}
+          isLoading={isLoading}
+        />
       </BackgroundGradient>
     </div>
     <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
@@ -501,7 +595,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const ChatDecorations = () => (
     <>
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-8 left-8 hidden lg:block">
+        <div className="absolute top-20 left-12 hidden lg:block">
           <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float">
             <Code2 className="h-4 w-4 text-[#6c5dd3]" />
             <span className="text-xs text-gray-400">Coding in progress...</span>
@@ -529,24 +623,17 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob" />
+        {/* <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob" />
         <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-2000" />
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-4000" />
+        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-4000" /> */}
       </div>
 
-      <div className="fixed top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" />
+      {/* <div className="fixed top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" />
       <div className="fixed top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-500 to-transparent opacity-10 pointer-events-none" />
       <div className="fixed bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-500 to-transparent opacity-10 pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" /> */}
     </>
   );
-
-  const toggleMessage = (index: number) => {
-    setExpandedMessages(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
-  };
 
   return (
     <div className="flex flex-col h-screen bg-transparent animate-fade-in animation-delay-500">
@@ -554,27 +641,21 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       <ScrollArea className="flex-1 px-4 md:px-8 pt-16 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
         {currentChat?.messages?.length ? (
           <div className="mx-auto max-w-4xl space-y-6">
-            {currentChat?.messages?.map((msg, idx) => (
-              <ChatMessage
-                key={idx}
-                msg={msg}
-                index={idx}
-                expanded={!!expandedMessages[idx]}
-                onToggle={() => toggleMessage(idx)}
-              />
-            ))}
-            {isLoading && (
-              <div className="py-6">
-                <div className="max-w-3xl mx-auto flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-medium text-white">
-                    A
-                  </div>
-                  <div className="flex-1">
-                    <div className="h-5 w-5 animate-spin border-2 border-blue-500 border-t-transparent rounded-full" />
-                  </div>
-                </div>
-              </div>
-            )}
+            {currentChat?.messages?.map((msg, idx) => {
+              const firstAssistantIndex = currentChat.messages.findIndex(m => m.role === 'assistant');
+              const isFirstAssistantMessage = idx === firstAssistantIndex;
+              
+              return (
+                <ChatMessage
+                  key={idx}
+                  msg={msg}
+                  index={idx}
+                  expanded={!!expandedMessages[idx]}
+                  onToggle={() => toggleMessage(idx)}
+                  isFirstAssistantMessage={isFirstAssistantMessage}
+                />
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
         ) : (
@@ -583,26 +664,19 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </ScrollArea>
 
       {currentChat?.messages?.length > 0 && (
-        <div className="border-t border-[#1a1c26] p-4 bg-[#0a0b0f]/80 backdrop-blur-sm w-full">
-          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-            <div className="relative">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Message ChitsGPT..."
-                className="w-full p-4 pr-12 bg-[#12141c]/80 backdrop-blur-sm rounded-lg border border-[#302c59] focus:outline-none focus:ring-2 focus:ring-[#302c59]"
-                onKeyDown={handleKeyDown}
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-[#302c59] rounded-lg disabled:opacity-50"
-                disabled={!message.trim() || isLoading}
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </div>
-          </form>
+        <div className="border-t border-[#1a1c26] p-5 bg-[#0a0a0a] backdrop-blur-sm w-full">
+          <div className="max-w-4xl mx-auto">
+            <ChatInput 
+              onSendMessage={(messageText) => {
+                if (!currentChat) {
+                  createNewChat(messageText);
+                } else {
+                  onSendMessage(messageText);
+                }
+              }}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
       )}
     </div>

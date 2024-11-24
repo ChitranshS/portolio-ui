@@ -2,7 +2,7 @@ import React from 'react';
 
 const AnimatedBackground = () => {
   return (
-    <div className="fixed inset-0" style={{ zIndex: -1 }}>
+    <div className="fixed opacity-50 inset-0" style={{ zIndex: -1 }}>
       {/* Base background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0b0f] via-[#141729] to-[#0a0b0f]" />
       

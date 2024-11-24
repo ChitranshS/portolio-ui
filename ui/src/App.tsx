@@ -5,11 +5,11 @@ import ChatArea from './components/ChatArea';
 import ProfileDropdown from './components/ProfileDropdown';
 import { PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Chat, Message, MessageRole, StreamMessage, DBQueryResult, convertDBMessagesToChat } from './types';
-import ProfileModal from './components/ProfileModal';
+// import ProfileModal from './components/ProfileModal';
 import { v4 as uuidv4 } from 'uuid';
 import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv'
-import { BackgroundBeams } from "@/components/ui/background-beams";
+// import { BackgroundBeams } from "@/components/ui/background-beams";
 import { threadStorage } from './lib/threadStorage';
 import GlobalChats from './pages/GlobalChats';
 import AnimatedBackground from './components/AnimatedBackground';
@@ -131,9 +131,6 @@ function MainApp() {
       });
   
       setChats(uniqueChats);
-      // if (uniqueChats.length > 0 && !currentChat) {
-      //   setCurrentChat(uniqueChats[0]);
-      // }
   
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -276,21 +273,6 @@ function MainApp() {
       console.log('%c⚡ Sending 3 Random Requests ⚡', 'color: #ffa500; font-size: 14px; border-radius: 5px;');
       sendRandomRequests();
     }
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Check for Ctrl + Shift + G
-      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'g') {
-        event.preventDefault();
-        setIsGlobalView(prev => !prev);
-        setCurrentChat(null);
-        fetchMessagesFromDB();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {
@@ -489,20 +471,10 @@ function MainApp() {
     }
   };
 
-  const deleteChat = (chatId: number) => {
-    const chatToDelete = chats.find(chat => chat.id === chatId);
-    if (chatToDelete?.threadId) {
-      threadStorage.removeThreadId(chatToDelete.threadId);
-    }
-    setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
-    if (currentChat?.id === chatId) {
-      setCurrentChat(null);
-    }
-  };
 
   return (
     <div className="relative min-h-screen bg-transparent">
-      {/* <AnimatedBackground /> */}
+      {!currentChat?.messages?.length && <AnimatedBackground />}
       <div className="relative z-10 h-screen flex text-gray-100 overflow-hidden bg-transparent">
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}

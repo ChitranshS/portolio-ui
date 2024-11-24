@@ -9,6 +9,12 @@ interface PromptNavProps {
 const PromptNav: React.FC<PromptNavProps> = ({ activeSection, onSectionChange }) => {
   const navItems = [
     {
+      id: 'about',
+      label: 'About Me',
+      icon: <Sparkles size={20} className="sm:size-4" />,
+      tooltip: 'Learn More About Me'
+    },
+    {
       id: 'quick',
       label: 'Quick Prompts',
       icon: <Zap size={20} className="sm:size-4" />,
@@ -25,18 +31,13 @@ const PromptNav: React.FC<PromptNavProps> = ({ activeSection, onSectionChange })
       label: 'Mini Games',
       icon: <Gamepad2 size={20} className="sm:size-4" />,
       tooltip: 'Play Some Fun Games!'
-    },
-    {
-      id: 'about',
-      label: 'About Me',
-      icon: <Sparkles size={20} className="sm:size-4" />,
-      tooltip: 'Learn More About Me'
     }
+   
   ];
 
   return (
     <div className="w-full max-w-xl mx-auto mb-6 px-2 sm:px-0">
-      <nav className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-1.5 flex justify-between sm:justify-start sm:gap-1">
+      <nav className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-2.5 flex justify-between sm:justify-start sm:gap-1">
         {navItems.map((item) => (
           <button
             key={item.id}
