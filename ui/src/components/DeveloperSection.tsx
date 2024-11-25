@@ -10,7 +10,7 @@ const DevelopersSection = () => {
 
   return (
     <SpotlightBackground>
-      <div className="p-6 max-w-2xl mx-auto">
+      <div className="p-6 w-full">
         <div className="flex flex-col items-center space-y-4">
           {/* Profile Image */}
           <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#6c5dd3] shadow-lg transform transition-transform duration-300 hover:scale-105">

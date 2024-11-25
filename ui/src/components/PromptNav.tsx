@@ -11,41 +11,41 @@ const PromptNav: React.FC<PromptNavProps> = ({ activeSection, onSectionChange })
     {
       id: 'about',
       label: 'About Me',
-      icon: <Sparkles size={20} className="sm:size-4" />,
+      icon: <Sparkles size={16} className="transition-colors duration-300" />,
       tooltip: 'Learn More About Me'
     },
     {
       id: 'quick',
       label: 'Quick Prompts',
-      icon: <Zap size={20} className="sm:size-4" />,
+      icon: <Zap size={16} className="transition-colors duration-300" />,
       tooltip: 'Technical & Professional Prompts'
     },
     {
       id: 'professional',
       label: 'Professional',
-      icon: <Briefcase size={20} className="sm:size-4" />,
+      icon: <Briefcase size={16} className="transition-colors duration-300" />,
       tooltip: 'Professional Portfolio & Experience'
     },
     {
       id: 'games',
       label: 'Mini Games',
-      icon: <Gamepad2 size={20} className="sm:size-4" />,
+      icon: <Gamepad2 size={16} className="transition-colors duration-300" />,
       tooltip: 'Play Some Fun Games!'
     }
    
   ];
 
   return (
-    <div className="w-full max-w-xl mx-auto mb-6 px-2 sm:px-0">
-      <nav className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-2.5 flex justify-between sm:justify-start sm:gap-1">
+    <div className="w-full max-w-2xl mx-auto mb-6 px-2 sm:px-0">
+      <nav className="bg-gray-900/50 backdrop-blur-sm rounded-lg p-3 sm:p-3.5 flex justify-center sm:justify-center sm:gap-3">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onSectionChange(item.id)}
             className={`
               flex-1 sm:flex-initial
-              flex items-center justify-center sm:justify-start gap-2 
-              px-2 sm:px-3 py-2 sm:py-1.5 rounded-md
+              flex items-center justify-center sm:justify-start gap-2.5
+              px-3 sm:px-4 py-2 sm:py-2 rounded-md
               transition-all duration-300 ease-out
               group relative hover:scale-105
               ${activeSection === item.id 
@@ -55,8 +55,9 @@ const PromptNav: React.FC<PromptNavProps> = ({ activeSection, onSectionChange })
           >
             {/* Icon with floating animation */}
             <span className={`
+              flex items-center justify-center w-5 h-5
               transition-all duration-300
-              ${activeSection === item.id ? 'scale-110 animate-bounce' : 'group-hover:scale-110 group-hover:rotate-12'}
+              ${activeSection === item.id ? 'scale-110 animate-bounce text-purple-400' : 'group-hover:scale-110 group-hover:rotate-12 text-gray-500'}
             `}>
               {item.icon}
             </span>

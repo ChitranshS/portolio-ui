@@ -5,7 +5,7 @@ import {
   Image, 
   Code, 
   Eye, 
-  Lightbulb, 
+  Lightbulb,
   Search,
   ChevronDown,
   ChevronUp,
@@ -19,7 +19,8 @@ import {
   HelpCircle,
   Puzzle,
   Briefcase,
-  Cpu
+  Cpu,
+  GraduationCap
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Chat } from '../types';
@@ -46,35 +47,77 @@ interface ExpandedMessages {
 const MESSAGE_THRESHOLD = 300;
 const QuickPrompts = [
   { 
-    icon: <Image size={20} />, 
+    icon: <Image size={20} className="text-[#6c5dd3]" />, 
     text: "Work Experience", 
     description: "Professional background and roles" ,
     prompt: "Tell me about your work experience"
   },
   { 
-    icon: <Code size={20} />, 
+    icon: <Code size={20} className="text-[#6c5dd3]" />, 
     text: "Skills & Expertise", 
     description: "Discuss technical and soft skills     " ,
     prompt: "Tell me about your skills and expertise"
   },
   { 
-    icon: <Eye size={20} />, 
+    icon: <Eye size={20} className="text-[#6c5dd3]" />, 
     text: "Technical Projects", 
     description: "View my coding projects and implementations" ,
     prompt: "Tell me about your technical projects"
   },
   { 
-    icon: <Lightbulb size={20} />, 
+    icon: <Github size={20} className="text-[#6c5dd3]" />, 
     text: "GitHub Portfolio", 
     description: "Browse through my code repositories",
     prompt: "Tell me about your GitHub portfolio"
   },
   { 
-    icon: <Lightbulb size={20} />, 
+    icon: <GraduationCap size={20} className="text-[#6c5dd3]" />, 
     text: "Education", 
     description: "Academic background and skills" ,
     prompt: "Tell me about your education"
   },
+];
+
+const GamePrompts = [
+  {
+    icon: <Gamepad2 size={20} className="text-[#6c5dd3]" />,
+    text: "Word Guess",
+    description: "Challenge me to a word guessing game!",
+    prompt: "Let's play a word guessing game!"
+  },
+  {
+    icon: <HelpCircle size={20} className="text-[#6c5dd3]" />,
+    text: "20 Questions",
+    description: "Think of something, I'll try to guess it!",
+    prompt: "Let's play 20 questions!"
+  },
+  {
+    icon: <Puzzle size={20} className="text-[#6c5dd3]" />,
+    text: "Riddles",
+    description: "Test your wit with some brain teasers!",
+    prompt: "Let's play a riddle game!"
+  }
+];
+
+const ProfessionalPrompts = [
+  {
+    icon: <Briefcase size={20} className="text-[#6c5dd3]" />,
+    text: "Experience",
+    description: "Learn about my professional journey and expertise",
+    prompt: "Tell me about your professional experience and skills"
+  },
+  {
+    icon: <Code2 size={20} className="text-[#6c5dd3]" />,
+    text: "Projects",
+    description: "Explore my portfolio of projects and achievements",
+    prompt: "What projects have you worked on?"
+  },
+  {
+    icon: <Cpu size={20} className="text-[#6c5dd3]" />,
+    text: "Skills",
+    description: "Discover my technical skills and areas of expertise",
+    prompt: "What are your technical skills and expertise?"
+  }
 ];
 
 const ChatMessage: React.FC<{ 
@@ -149,18 +192,14 @@ const ChatMessage: React.FC<{
           
           {/* Timestamp and interaction indicators */}
           <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-            <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">
-              {new Date().toLocaleTimeString()}
-            </span>
+          
             {msg.role === 'assistant' && (
               <div className="flex items-center gap-1">
-                <span className="w-1 h-1 bg-[#6c5dd3] rounded-full" />
                 <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">Chitransh</span>
               </div>
             )}
              {msg.role === 'user' && (
               <div className="flex items-center gap-1">
-                <span className="w-1 h-1 bg-[#6c5dd3] rounded-full" />
                 <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">You</span>
               </div>
             )}
@@ -182,6 +221,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [expandedMessages, setExpandedMessages] = useState<ExpandedMessages>({});
   const [activeSection, setActiveSection] = useState('quick'); 
   const [showColdStartHint, setShowColdStartHint] = useState(false);
+  const [isChatMode, setIsChatMode] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -263,7 +303,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   
     // Helper function to generate random number divisible by 20 (less than 100)
     const getRandomDivisibleByTwenty = () => {
-      const values = [20, 40, 60, 80];
+      const values = [20, 40, 60];
       return values[Math.floor(Math.random() * values.length)];
     };
   
@@ -294,194 +334,122 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     switch (activeSection) {
       case 'quick':
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
-            {QuickPrompts.map((prompt, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  if (!currentChat) {
-                    createNewChat(prompt.prompt);
-                  } else {
-                    onSendMessage(prompt.prompt);
-                  }
-                }}
-                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-                <div className="relative rounded-lg bg-[#12141c] p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                      {prompt.icon}
+          <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+              {QuickPrompts.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (!currentChat) {
+                      createNewChat(prompt.prompt);
+                    } else {
+                      onSendMessage(prompt.prompt);
+                    }
+                  }}
+                  className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+                  <div className="relative rounded-lg bg-[#12141c] p-8">
+                    <div className="relative flex items-center justify-center mb-6">
+                      <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        {prompt.icon}
+                      </div>
+                      <Sparkles className="absolute right-0 h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
                     </div>
-                    <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                    <span className="font-medium text-lg block mb-2">{prompt.text}</span>
+                    <span className="text-sm text-gray-400 block leading-relaxed">{prompt.description}</span>
                   </div>
-                  <span className="font-medium text-lg block mb-2">{prompt.text}</span>
-                  <span className="text-sm text-gray-400 block leading-relaxed">{prompt.description}</span>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
         );
       case 'games':
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
-            <button
-              onClick={() => {
-                if (!currentChat) {
-                  createNewChat("Let's play a word guessing game!");
-                } else {
-                  onSendMessage("Let's play a word guessing game!");
-                }
-              }}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-              <div className="relative rounded-lg bg-[#12141c] p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                    <Gamepad2 className="h-5 w-5 text-[#6c5dd3]" />
+          <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+              {GamePrompts.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (!currentChat) {
+                      createNewChat(prompt.prompt);
+                    } else {
+                      onSendMessage(prompt.prompt);
+                    }
+                  }}
+                  className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+                  <div className="relative rounded-lg bg-[#12141c] p-8">
+                    <div className="relative flex items-center justify-center mb-6">
+                      <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        {prompt.icon}
+                      </div>
+                      <Sparkles className="absolute right-0 h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                    </div>
+                    <span className="font-medium text-lg block mb-2">{prompt.text}</span>
+                    <span className="text-sm text-gray-400 block leading-relaxed">{prompt.description}</span>
                   </div>
-                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
-                </div>
-                <span className="font-medium text-lg block mb-2">Word Guess</span>
-                <span className="text-sm text-gray-400 block leading-relaxed">Challenge me to a word guessing game!</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                if (!currentChat) {
-                  createNewChat("Let's play 20 questions!");
-                } else {
-                  onSendMessage("Let's play 20 questions!");
-                }
-              }}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-              <div className="relative rounded-lg bg-[#12141c] p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                    <HelpCircle className="h-5 w-5 text-[#6c5dd3]" />
-                  </div>
-                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
-                </div>
-                <span className="font-medium text-lg block mb-2">20 Questions</span>
-                <span className="text-sm text-gray-400 block leading-relaxed">Think of something, I'll try to guess it!</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                if (!currentChat) {
-                  createNewChat("Let's play a riddle game!");
-                } else {
-                  onSendMessage("Let's play a riddle game!");
-                }
-              }}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-              <div className="relative rounded-lg bg-[#12141c] p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                    <Puzzle className="h-5 w-5 text-[#6c5dd3]" />
-                  </div>
-                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
-                </div>
-                <span className="font-medium text-lg block mb-2">Riddles</span>
-                <span className="text-sm text-gray-400 block leading-relaxed">Test your wit with some brain teasers!</span>
-              </div>
-            </button>
+                </button>
+              ))}
+            </div>
           </div>
         );
       case 'about':
         return (
-          <div className="animate-slideIn">
-            <DevelopersSection />
+            <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 md:gap-x-4 sm:gap-x-8 lg:grid-cols-8 lg:gap-x-32 animate-fadeIn">
+            <div className="col-start-1 col-end-2"/>
+              <div className="col-start-2 col-end-8">
+              <DevelopersSection />
+              </div>
+            <div className='col-start-8 col-end-9'/>
+            </div>
           </div>
         );
       case 'professional':
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
-            <button
-              onClick={() => {
-                if (!currentChat) {
-                  createNewChat("Tell me about your professional experience and skills");
-                } else {
-                  onSendMessage("Tell me about your professional experience and skills");
-                }
-              }}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-              <div className="relative rounded-lg bg-[#12141c] p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                    <Briefcase className="h-5 w-5 text-[#6c5dd3]" />
+          <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+              {ProfessionalPrompts.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (!currentChat) {
+                      createNewChat(prompt.prompt);
+                    } else {
+                      onSendMessage(prompt.prompt);
+                    }
+                  }}
+                  className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
+                  <div className="relative rounded-lg bg-[#12141c] p-8">
+                    <div className="relative flex items-center justify-center mb-6">
+                      <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                        {prompt.icon}
+                      </div>
+                      <Sparkles className="absolute right-0 h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
+                    </div>
+                    <span className="font-medium text-lg block mb-2">{prompt.text}</span>
+                    <span className="text-sm text-gray-400 block leading-relaxed">{prompt.description}</span>
                   </div>
-                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
-                </div>
-                <span className="font-medium text-lg block mb-2">Experience</span>
-                <span className="text-sm text-gray-400 block leading-relaxed">Learn about my professional journey and expertise</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                if (!currentChat) {
-                  createNewChat("What projects have you worked on?");
-                } else {
-                  onSendMessage("What projects have you worked on?");
-                }
-              }}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-              <div className="relative rounded-lg bg-[#12141c] p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                    <Code2 className="h-5 w-5 text-[#6c5dd3]" />
-                  </div>
-                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
-                </div>
-                <span className="font-medium text-lg block mb-2">Projects</span>
-                <span className="text-sm text-gray-400 block leading-relaxed">Explore my portfolio of projects and achievements</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                if (!currentChat) {
-                  createNewChat("What are your technical skills and expertise?");
-                } else {
-                  onSendMessage("What are your technical skills and expertise?");
-                }
-              }}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1c26] to-[#12141c] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#6c5dd3]/20"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#6c5dd3] to-[#302c59] opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
-              <div className="relative rounded-lg bg-[#12141c] p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 rounded-lg bg-[#6c5dd3] bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300">
-                    <Cpu className="h-5 w-5 text-[#6c5dd3]" />
-                  </div>
-                  <Sparkles className="h-5 w-5 text-[#6c5dd3] opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300" />
-                </div>
-                <span className="font-medium text-lg block mb-2">Skills</span>
-                <span className="text-sm text-gray-400 block leading-relaxed">Discover my technical skills and areas of expertise</span>
-              </div>
-            </button>
+                </button>
+              ))}
+            </div>
           </div>
         );
       default:
         return null;
     }
   };
+  const funPos = ["left-2 top-1/2" , "right-2 top-1/2"];
+  const funRandom =funPos[Math.floor(Math.random() * funPos.length)];
 
   const EmptyState = () => (
     <div className="relative h-full flex flex-col items-center justify-center p-4 md:p-10">
-      <FloatingWidget 
+      {/* <FloatingWidget 
         icon={<Coffee className="h-4 w-4 text-amber-500" />} 
         text="Coffee Driven"
         position="bottom-20 left-40"
@@ -534,9 +502,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         text="Gaming Enthusiast"
         position={getRandomPosition()}
         delay={2.4}
-      />
-
-      <div className="absolute left-4 top-1/2 hidden lg:block">
+      /> */}
+      <div className={`absolute ${funRandom} hidden lg:inline-block opacity-60`}>
         <div className="bg-[#1a1c26] p-4 rounded-xl">
           <div className="text-sm text-gray-400 mb-2">Fun Facts</div>
           <div className="space-y-2">
@@ -568,9 +535,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     </h3>
   </div>
   <div className="w-full max-w-4xl px-4">
-    <div className="relative mb-16">
+    <div className="relative mb-16 max-w-2xl mx-auto">
       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-      <BackgroundGradient className="rounded-full">
+      <BackgroundGradient className="rounded-full w-full">
         <ChatInput 
           onSendMessage={(messageText) => {
             if (!currentChat) {
@@ -580,8 +547,27 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             }
           }}
           isLoading={isLoading}
+          className="w-full"
         />
       </BackgroundGradient>
+    </div>
+
+    <div className="w-full max-w-xs sm:max-w-sm md:w-1/3 relative mb-5 mx-auto block">
+          <button 
+            onClick={() => setIsChatMode(!isChatMode)}
+            className={`w-full bg-[#1a1c26] p-3 sm:p-4 rounded-full text-sm sm:text-base flex items-center justify-between transition-all duration-300 ${
+              isChatMode ? 'text-[#6c5dd3]' : 'text-gray-400'
+            }`}
+          >
+            <span className="font-medium">Chat Mode</span>
+            <div className={`w-8 sm:w-10 h-4 sm:h-5 rounded-full relative ${
+              isChatMode ? 'bg-[#6c5dd3]' : 'bg-gray-600'
+            }`}>
+              <div className={`absolute top-0.5 left-0.5 w-3 sm:w-4 h-3 sm:h-4 bg-white rounded-full transition-transform duration-300 ${
+                isChatMode ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
+              }`} />
+            </div>
+          </button>
     </div>
     <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
     <div className="transition-all duration-300 ease-in-out">
@@ -665,7 +651,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
       {currentChat?.messages?.length > 0 && (
         <div className="border-t border-[#1a1c26] p-5 bg-[#0a0a0a] backdrop-blur-sm w-full">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <ChatInput 
               onSendMessage={(messageText) => {
                 if (!currentChat) {
