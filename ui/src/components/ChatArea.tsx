@@ -503,7 +503,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         position={getRandomPosition()}
         delay={2.4}
       /> */}
-      <div className={`absolute ${funRandom} hidden lg:inline-block opacity-60`}>
+      {/* <div className={`absolute ${funRandom} hidden lg:inline-block opacity-60`}>
         <div className="bg-[#1a1c26] p-4 rounded-xl">
           <div className="text-sm text-gray-400 mb-2">Fun Facts</div>
           <div className="space-y-2">
@@ -519,7 +519,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-      </div>
+      </div> */}
 
       {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
@@ -535,24 +535,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     </h3>
   </div>
   <div className="w-full max-w-4xl px-4">
-    <div className="relative mb-16 max-w-2xl mx-auto">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-      <BackgroundGradient className="rounded-full w-full">
-        <ChatInput 
-          onSendMessage={(messageText) => {
-            if (!currentChat) {
-              createNewChat(messageText);
-            } else {
-              onSendMessage(messageText);
-            }
-          }}
-          isLoading={isLoading}
-          className="w-full"
-        />
-      </BackgroundGradient>
-    </div>
-
-    <div className="w-full max-w-xs sm:max-w-sm md:w-1/3 relative mb-5 mx-auto block">
+    <div className="w-full max-w-xs sm:max-w-sm relative mb-5 mx-auto block">
           <button 
             onClick={() => setIsChatMode(!isChatMode)}
             className={`w-full bg-[#1a1c26] p-3 sm:p-4 rounded-full text-sm sm:text-base flex items-center justify-between transition-all duration-300 ${
@@ -569,10 +552,29 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             </div>
           </button>
     </div>
-    <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
-    <div className="transition-all duration-300 ease-in-out">
-      {renderSection()}
-    </div>
+
+    {isChatMode && (
+      <>
+        <div className="relative mb-16 max-w-2xl mx-auto">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+          <BackgroundGradient className="rounded-full w-full">
+            <ChatInput 
+              onSendMessage={(messageText) => {
+                if (!currentChat) {
+                  createNewChat(messageText);
+                } else {
+                  onSendMessage(messageText);
+                }
+              }}
+              isLoading={isLoading}
+              className="w-full"
+            />
+          </BackgroundGradient>
+        </div>
+        <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
+        {renderSection()}
+      </>
+    )}
   </div>
       </div>
     </div>
@@ -650,7 +652,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </ScrollArea>
 
       {currentChat?.messages?.length > 0 && (
-        <div className="border-t border-[#1a1c26] p-5 bg-[#0a0a0a] backdrop-blur-sm w-full">
+        <div className="border-t border-[#1a0c26] p-5 bg-[#0a0a0a] backdrop-blur-sm w-full">
           <div className="max-w-2xl mx-auto">
             <ChatInput 
               onSendMessage={(messageText) => {
