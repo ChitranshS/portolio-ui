@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Send, 
-  Image, 
-  Code, 
-  Eye, 
+import {
+  Send,
+  Image,
+  Code,
+  Eye,
   Lightbulb,
   Search,
   ChevronDown,
@@ -46,34 +46,34 @@ interface ExpandedMessages {
 }
 const MESSAGE_THRESHOLD = 300;
 const QuickPrompts = [
-  { 
-    icon: <Image size={20} className="text-[#6c5dd3]" />, 
-    text: "Work Experience", 
-    description: "Professional background and roles" ,
+  {
+    icon: <Image size={20} className="text-[#6c5dd3]" />,
+    text: "Work Experience",
+    description: "Professional background and roles",
     prompt: "Tell me about your work experience"
   },
-  { 
-    icon: <Code size={20} className="text-[#6c5dd3]" />, 
-    text: "Skills & Expertise", 
-    description: "Discuss technical and soft skills     " ,
+  {
+    icon: <Code size={20} className="text-[#6c5dd3]" />,
+    text: "Skills & Expertise",
+    description: "Discuss technical and soft skills     ",
     prompt: "Tell me about your skills and expertise"
   },
-  { 
-    icon: <Eye size={20} className="text-[#6c5dd3]" />, 
-    text: "Technical Projects", 
-    description: "View my coding projects and implementations" ,
+  {
+    icon: <Eye size={20} className="text-[#6c5dd3]" />,
+    text: "Technical Projects",
+    description: "View my coding projects and implementations",
     prompt: "Tell me about your technical projects"
   },
-  { 
-    icon: <Github size={20} className="text-[#6c5dd3]" />, 
-    text: "GitHub Portfolio", 
+  {
+    icon: <Github size={20} className="text-[#6c5dd3]" />,
+    text: "GitHub Portfolio",
     description: "Browse through my code repositories",
     prompt: "Tell me about your GitHub portfolio"
   },
-  { 
-    icon: <GraduationCap size={20} className="text-[#6c5dd3]" />, 
-    text: "Education", 
-    description: "Academic background and skills" ,
+  {
+    icon: <GraduationCap size={20} className="text-[#6c5dd3]" />,
+    text: "Education",
+    description: "Academic background and skills",
     prompt: "Tell me about your education"
   },
 ];
@@ -120,8 +120,8 @@ const ProfessionalPrompts = [
   }
 ];
 
-const ChatMessage: React.FC<{ 
-  msg: any; 
+const ChatMessage: React.FC<{
+  msg: any;
   index: number;
   expanded: boolean;
   onToggle: () => void;
@@ -130,9 +130,9 @@ const ChatMessage: React.FC<{
   const content = msg.content || '';
   const isLongMessage = content.length > MESSAGE_THRESHOLD;
   const displayContent = expanded ? content : content.slice(0, MESSAGE_THRESHOLD);
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "p-6 rounded-lg group transform transition-all duration-300 hover:scale-[1.01]",
         msg.role === 'assistant' && "bg-[#12141c]",
@@ -189,16 +189,16 @@ const ChatMessage: React.FC<{
               )}
             </button>
           )}
-          
+
           {/* Timestamp and interaction indicators */}
           <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-          
+
             {msg.role === 'assistant' && (
               <div className="flex items-center gap-1">
                 <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">Chitransh</span>
               </div>
             )}
-             {msg.role === 'user' && (
+            {msg.role === 'user' && (
               <div className="flex items-center gap-1">
                 <span className="opacity-40 group-hover:opacity-100 transition-opacity duration-300">You</span>
               </div>
@@ -217,9 +217,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   createNewChat,
   isLoading = false
 }) => {
-  
+
   const [expandedMessages, setExpandedMessages] = useState<ExpandedMessages>({});
-  const [activeSection, setActiveSection] = useState('quick'); 
+  const [activeSection, setActiveSection] = useState('quick');
   const [showColdStartHint, setShowColdStartHint] = useState(false);
   const [isChatMode, setIsChatMode] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -257,8 +257,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     </div>
   );
 
-  const FloatingWidget = ({ icon, text, position, delay }: { 
-    icon: React.ReactNode; 
+  const FloatingWidget = ({ icon, text, position, delay }: {
+    icon: React.ReactNode;
     text: string;
     position: string;
     delay: number;
@@ -285,7 +285,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const positionHistory = {
     positions: [],
     maxSize: 6,
-  
+
     add: (position) => {
       if (positionHistory.positions.length >= positionHistory.maxSize) {
         positionHistory.positions.shift();
@@ -293,40 +293,40 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       positionHistory.positions.push(position);
     }
   };
-  
+
   const getRandomPosition = () => {
     // Helper function to generate random even number between 1 and 10
     const getRandomSmallEven = () => {
       const evens = [2, 4, 6, 8, 10];
       return evens[Math.floor(Math.random() * evens.length)];
     };
-  
+
     // Helper function to generate random number divisible by 20 (less than 100)
     const getRandomDivisibleByTwenty = () => {
       const values = [20, 40, 60];
       return values[Math.floor(Math.random() * values.length)];
     };
-  
+
     // Helper function to get random value following our rules
     const getRandomValue = () => {
       // 20% chance for small even numbers, 80% chance for numbers divisible by 20
-      return Math.random() < 0.2 
+      return Math.random() < 0.2
         ? getRandomSmallEven()
         : getRandomDivisibleByTwenty();
     };
-  
+
     let side = Math.random() > 0.5 ? 'left' : 'right';
     let vertical = Math.random() > 0.5 ? 'top' : 'bottom';
-    
+
     let x, y;
     do {
       x = getRandomValue();
       y = getRandomValue();
     } while (vertical === 'top' && y === 60 && side === 'right' && x === 80); // Avoid forbidden combination
-  
+
     const newPosition = { x, y };
     positionHistory.add(newPosition);
-    
+
     return `${side}-${newPosition.x} ${vertical}-${newPosition.y}`;
   };
 
@@ -398,13 +398,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         );
       case 'about':
         return (
-            <div className="w-full">
+          <div className="w-full">
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 md:gap-x-4 sm:gap-x-8 lg:grid-cols-8 lg:gap-x-32 animate-fadeIn">
-            <div className="col-start-1 col-end-2"/>
+              <div className="col-start-1 col-end-2" />
               <div className="col-start-2 col-end-8">
-              <DevelopersSection />
+                <DevelopersSection />
               </div>
-            <div className='col-start-8 col-end-9'/>
+              <div className='col-start-8 col-end-9' />
             </div>
           </div>
         );
@@ -444,8 +444,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         return null;
     }
   };
-  const funPos = ["left-2 top-1/2" , "right-2 top-1/2"];
-  const funRandom =funPos[Math.floor(Math.random() * funPos.length)];
+  const funPos = ["left-2 top-1/2", "right-2 top-1/2"];
+  const funRandom = funPos[Math.floor(Math.random() * funPos.length)];
 
   const EmptyState = () => (
     <div className="relative h-full flex flex-col items-center justify-center p-4 md:p-10">
@@ -528,58 +528,61 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       </div> */}
 
       <div className="relative z-10">
-  <div className="mb-12">
-    <Logo />
-    <h3 className="text-md text-gray-500 mt-6 text-center">
-      <TextGenerateEffect words={words} className="text-sm text-gray-500" />
-    </h3>
-  </div>
-  <div className="w-full max-w-4xl px-4">
-    <div className="w-full max-w-xs sm:max-w-sm relative mb-5 mx-auto block">
-          <button 
-            onClick={() => setIsChatMode(!isChatMode)}
-            className={`w-full bg-[#1a1c26] p-3 sm:p-4 rounded-full text-sm sm:text-base flex items-center justify-between transition-all duration-300 ${
-              isChatMode 
-                ? 'text-gray-300 scale-75 relative before:absolute before:inset-[-2px] before:rounded-full before:bg-gradient-to-r before:from-[#6c5dd3] before:via-purple-500 before:to-[#6c5dd3] before:animate-gradient-x before:-z-10' 
-                : 'text-gray-400'
-            }`}
-          >
-            <span className={`font-semibold ${isChatMode ? 'scale-[1.3] origin-left' : ''}`}>Chat Mode</span>
-            <div className={`w-8 sm:w-10 h-4 sm:h-5 rounded-full relative transition-colors duration-300 ${
-              isChatMode ? 'bg-white/20 scale-[1.3]' : 'bg-gray-600/30'
-            }`}>
-              <div className={`absolute top-0.5 left-0.5 w-3 sm:w-4 h-3 sm:h-4 rounded-full transition-all duration-300 shadow-md ${
-                isChatMode 
-                  ? 'translate-x-4 sm:translate-x-5 bg-white' 
-                  : 'translate-x-0 bg-gray-400'
-              }`} />
-            </div>
-          </button>
-    </div>
-
-    {isChatMode && (
-      <>
-        <div className="relative mb-16 max-w-2xl mx-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-          <BackgroundGradient className="rounded-full w-full">
-            <ChatInput 
-              onSendMessage={(messageText) => {
-                if (!currentChat) {
-                  createNewChat(messageText);
-                } else {
-                  onSendMessage(messageText);
-                }
-              }}
-              isLoading={isLoading}
-              className="w-full"
-            />
-          </BackgroundGradient>
+        <div className="mb-12">
+          <Logo />
+          <h3 className="text-md text-gray-500 mt-6 text-center">
+            <TextGenerateEffect words={words} className="text-sm text-gray-500" />
+          </h3>
         </div>
-        <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
-        {renderSection()}
-      </>
-    )}
-  </div>
+        <div className="w-full max-w-4xl px-4">
+          <div className="w-full max-w-xs sm:max-w-sm relative mb-5 mx-auto block">
+            <button
+              onClick={() => setIsChatMode(!isChatMode)}
+              className={`w-full bg-gray-900 p-4 rounded-full text-sm flex items-center justify-between transition-all duration-300 
+    ${isChatMode
+                  ? 'text-gray-300 scale-90 bg-gradient-to-r from-purple-600 to-purple-800 shadow-lg'
+                  : 'text-gray-400 hover:bg-gray-800'}`}
+            >
+              <span className={`transition-transform duration-300 font-semibold
+    ${isChatMode ? 'scale-110 text-white' : ''}`}>
+                Chat Mode
+              </span>
+
+              {/* Toggle Switch */}
+              <div className={`w-10 h-5 rounded-full relative transition-colors duration-300 
+    ${isChatMode ? 'bg-white bg-opacity-10 scale-110' : 'bg-gray-600 bg-opacity-30'}`}>
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-md 
+      ${isChatMode
+                    ? 'translate-x-5 bg-white'
+                    : 'translate-x-0 bg-gray-400'}`}
+                />
+              </div>
+            </button>
+          </div>
+
+          {isChatMode && (
+            <>
+              <div className="relative mb-16 max-w-2xl mx-auto">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                <BackgroundGradient className="rounded-full w-full">
+                  <ChatInput
+                    onSendMessage={(messageText) => {
+                      if (!currentChat) {
+                        createNewChat(messageText);
+                      } else {
+                        onSendMessage(messageText);
+                      }
+                    }}
+                    isLoading={isLoading}
+                    className="w-full"
+                  />
+                </BackgroundGradient>
+              </div>
+              <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
+              {renderSection()}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -628,49 +631,57 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   );
 
   return (
-    <div className="flex flex-col h-screen bg-transparent animate-fade-in animation-delay-500">
+    <div className="min-h-screen bg-gray-900 p-8 flex items-start justify-center">
       {currentChat?.messages?.length > 0 && <ChatDecorations />}
-      <ScrollArea className="flex-1 px-4 md:px-8 pt-16 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
-        {currentChat?.messages?.length ? (
-          <div className="mx-auto max-w-4xl space-y-6">
-            {currentChat?.messages?.map((msg, idx) => {
-              const firstAssistantIndex = currentChat.messages.findIndex(m => m.role === 'assistant');
-              const isFirstAssistantMessage = idx === firstAssistantIndex;
-              
-              return (
-                <ChatMessage
-                  key={idx}
-                  msg={msg}
-                  index={idx}
-                  expanded={!!expandedMessages[idx]}
-                  onToggle={() => toggleMessage(idx)}
-                  isFirstAssistantMessage={isFirstAssistantMessage}
-                />
-              );
-            })}
-            <div ref={messagesEndRef} />
-          </div>
-        ) : (
-          <EmptyState />
-        )}
-      </ScrollArea>
+      <div className="w-full max-w-4xl px-4 transition-all duration-300 ease-in-out">
+        <div className="w-full max-w-sm relative mb-5 mx-auto block">
+          <button
+            onClick={() => setIsChatMode(!isChatMode)}
+            className={`w-full bg-gray-900 p-4 rounded-full text-sm flex items-center justify-between transition-all duration-300 
+              ${isChatMode
+                ? 'text-gray-300 scale-90 bg-gradient-to-r from-purple-600 to-purple-800 shadow-lg'
+                : 'text-gray-400 hover:bg-gray-800'}`}
+          >
+            <span className={`transition-transform duration-300 font-semibold
+              ${isChatMode ? 'scale-110 text-white' : ''}`}>
+              Chat Mode
+            </span>
 
-      {currentChat?.messages?.length > 0 && (
-        <div className="border-t border-[#1a0c26] p-5 bg-[#0a0a0a] backdrop-blur-sm w-full">
-          <div className="max-w-2xl mx-auto">
-            <ChatInput 
-              onSendMessage={(messageText) => {
-                if (!currentChat) {
-                  createNewChat(messageText);
-                } else {
-                  onSendMessage(messageText);
-                }
-              }}
-              isLoading={isLoading}
-            />
-          </div>
+            {/* Toggle Switch */}
+            <div className={`w-10 h-5 rounded-full relative transition-colors duration-300 
+              ${isChatMode ? 'bg-white bg-opacity-10 scale-110' : 'bg-gray-600 bg-opacity-30'}`}>
+              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-md 
+                ${isChatMode
+                  ? 'translate-x-5 bg-white'
+                  : 'translate-x-0 bg-gray-400'}`}
+              />
+            </div>
+          </button>
         </div>
-      )}
+
+        {/* Content Section */}
+        <div className={`w-full transition-all duration-500 ease-out 
+          ${isChatMode ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="relative mb-16 max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+            <BackgroundGradient className="rounded-full w-full">
+              <ChatInput
+                onSendMessage={(messageText) => {
+                  if (!currentChat) {
+                    createNewChat(messageText);
+                  } else {
+                    onSendMessage(messageText);
+                  }
+                }}
+                isLoading={isLoading}
+                className="w-full pl-12"
+              />
+            </BackgroundGradient>
+          </div>
+          <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
+          {renderSection()}
+        </div>
+      </div>
     </div>
   );
 };
