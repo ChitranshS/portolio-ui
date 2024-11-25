@@ -207,3 +207,17 @@
 .animate-bounce {
   animation: bounce 1s infinite;
 }
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 100%;
+  animation: gradient-x 3s linear infinite;
+}

@@ -539,15 +539,19 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           <button 
             onClick={() => setIsChatMode(!isChatMode)}
             className={`w-full bg-[#1a1c26] p-3 sm:p-4 rounded-full text-sm sm:text-base flex items-center justify-between transition-all duration-300 ${
-              isChatMode ? 'text-[#6c5dd3]' : 'text-gray-400'
+              isChatMode 
+                ? 'text-gray-300 scale-75 relative before:absolute before:inset-[-2px] before:rounded-full before:bg-gradient-to-r before:from-[#6c5dd3] before:via-purple-500 before:to-[#6c5dd3] before:animate-gradient-x before:-z-10' 
+                : 'text-gray-400'
             }`}
           >
-            <span className="font-medium">Chat Mode</span>
-            <div className={`w-8 sm:w-10 h-4 sm:h-5 rounded-full relative ${
-              isChatMode ? 'bg-[#6c5dd3]' : 'bg-gray-600'
+            <span className={`font-semibold ${isChatMode ? 'scale-[1.3] origin-left' : ''}`}>Chat Mode</span>
+            <div className={`w-8 sm:w-10 h-4 sm:h-5 rounded-full relative transition-colors duration-300 ${
+              isChatMode ? 'bg-white/20 scale-[1.3]' : 'bg-gray-600/30'
             }`}>
-              <div className={`absolute top-0.5 left-0.5 w-3 sm:w-4 h-3 sm:h-4 bg-white rounded-full transition-transform duration-300 ${
-                isChatMode ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
+              <div className={`absolute top-0.5 left-0.5 w-3 sm:w-4 h-3 sm:h-4 rounded-full transition-all duration-300 shadow-md ${
+                isChatMode 
+                  ? 'translate-x-4 sm:translate-x-5 bg-white' 
+                  : 'translate-x-0 bg-gray-400'
               }`} />
             </div>
           </button>
