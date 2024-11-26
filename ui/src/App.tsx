@@ -324,8 +324,15 @@ function MainApp() {
       setCurrentChat(chatWithAssistant);
   
       try {
-        // const response = await fetch('http://localhost:8000/chat', {
-        const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('TIMEOUT'));
+          }, 35000); // 35 seconds timeout
+        });
+
+        // Create the fetch promise
+        const fetchPromise = fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -339,6 +346,9 @@ function MainApp() {
             threadId: activeChat.threadId
           }),
         });
+
+        // Race between timeout and fetch
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -394,7 +404,9 @@ function MainApp() {
         
         // Handle errors
         const errorResponse: StreamMessage = {
-          content: "Sorry, there was an error processing your request. Please try again.",
+          content: error.message === 'TIMEOUT' 
+            ? "I apologize for the delay. I'm taking longer than usual to process your request. Please feel free to try again or rephrase your question."
+            : "Sorry, there was an error processing your request. Please try again.",
           role: 'assistant',
           timestamp: new Date().toISOString(),
           isStreaming: false

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, FileDown, Github, Info, Twitter, Linkedin } from 'lucide-react';
+import { User, FileDown, Github, Twitter, Linkedin } from 'lucide-react';
 
 interface ProfileDropdownProps {}
 
@@ -22,7 +22,6 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = () => {
     { icon: <Github size={18} />, label: 'Github', url: 'https://github.com/ChitranshS' },
     { icon: <Linkedin size={18} />, label: 'LinkedIn', url: 'https://www.linkedin.com/in/chitransh-srivastava-ai/' },
     { icon: <Twitter size={18} />, label: 'Twitter', url: 'https://twitter.com/ChitranshS' },
-    { icon: <Info size={18} />, label: 'Info' },
   ];
 
   return (

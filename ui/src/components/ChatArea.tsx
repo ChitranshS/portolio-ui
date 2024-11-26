@@ -20,7 +20,13 @@ import {
   Puzzle,
   Briefcase,
   Cpu,
-  GraduationCap
+  GraduationCap,
+  Zap,
+  Share2,
+  Linkedin,
+  Twitter,
+  FileDown,
+  X
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Chat } from '../types';
@@ -221,7 +227,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [expandedMessages, setExpandedMessages] = useState<ExpandedMessages>({});
   const [activeSection, setActiveSection] = useState('quick');
   const [showColdStartHint, setShowColdStartHint] = useState(false);
-  const [isChatMode, setIsChatMode] = useState(true);
+  const [isChatMode, setIsChatMode] = useState(false);
+  const [showHoverNotification, setShowHoverNotification] = useState(false);
+  const [showChatNotification, setShowChatNotification] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -239,6 +247,25 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
+
+  useEffect(() => {
+    if (!isChatMode) {
+      // Show hover notification after 1 second
+      const hoverTimer = setTimeout(() => {
+        setShowHoverNotification(true);
+      }, 1000);
+
+      // Show chat notification after 3 seconds
+      const chatTimer = setTimeout(() => {
+        setShowChatNotification(true);
+      }, 3000);
+
+      return () => {
+        clearTimeout(hoverTimer);
+        clearTimeout(chatTimer);
+      };
+    }
+  }, [isChatMode]);
 
   const toggleMessage = (index: number) => {
     setExpandedMessages(prev => ({
@@ -263,14 +290,17 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     position: string;
     delay: number;
   }) => (
-    <div className={`absolute ${position} hidden lg:flex items-center gap-2 p-3 bg-[#1a1c26] opacity-60 rounded-full 
-      transform hover:scale-110 hover:opacity-100 transition-all duration-300 cursor-pointer
-      animate-float
+    <div className={`absolute ${position} hidden lg:flex items-center gap-3 p-3.5 bg-[#1a1c26]/90 backdrop-blur-lg 
+      border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40
+      rounded-full transform hover:scale-105 transition-all duration-300 cursor-pointer group
+      animate-float opacity-40 group-hover:opacity-100
     `}
       style={{ animationDelay: `${delay}s` }}
     >
-      {icon}
-      <span className="text-sm text-gray-400">{text}</span>
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+        {icon}
+      </div>
+      <span className="text-sm text-gray-400 group-hover:text-white transition-colors">{text}</span>
     </div>
   );
 
@@ -294,41 +324,520 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     }
   };
 
-  const getRandomPosition = () => {
-    // Helper function to generate random even number between 1 and 10
-    const getRandomSmallEven = () => {
-      const evens = [2, 4, 6, 8, 10];
-      return evens[Math.floor(Math.random() * evens.length)];
-    };
+  const EmptyState = () => (
+    <div className="relative h-full flex flex-col items-center justify-center p-4 md:p-10 overflow-hidden">
+      {/* Particle Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000" />
+      </div>
 
-    // Helper function to generate random number divisible by 20 (less than 100)
-    const getRandomDivisibleByTwenty = () => {
-      const values = [20, 40, 60];
-      return values[Math.floor(Math.random() * values.length)];
-    };
+      {/* Floating Cards - Only show when chat mode is off */}
+      {!isChatMode && (
+        <>
+          {/* Hover Notification */}
+          {showHoverNotification && (
+            <div className="absolute top-6 transform -translate-x-1/2 z-50 animate-slideIn ">
+              <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 rounded-full border border-violet-400/50 shadow-lg shadow-violet-500/20 flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-white" />
+                <span className="text-xs text-white font-medium">Hover over the cards to explore more about me!</span>
+                <button onClick={() => setShowHoverNotification(false)} className="text-white hover:text-gray-300 transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+          {showChatNotification && (
+            <div className="absolute top-16 transform -translate-x-1/2 z-50 animate-slideIn opacity-0">
+              <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 rounded-full border border-violet-400/50 shadow-lg shadow-violet-500/20 flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-white" />
+                <span className="text-xs text-white font-medium">Try out the chat mode!</span>
+                <button onClick={() => setShowChatNotification(false)} className="text-white hover:text-gray-300 transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
-    // Helper function to get random value following our rules
-    const getRandomValue = () => {
-      // 20% chance for small even numbers, 80% chance for numbers divisible by 20
-      return Math.random() < 0.2
-        ? getRandomSmallEven()
-        : getRandomDivisibleByTwenty();
-    };
+          {/* Profile Card */}
+          <div
+            className="absolute top-[15%] left-[15%] transform transition-all duration-500 hover:scale-110 group md:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 0s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[280px] opacity-100 group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-20 h-20 rounded-full border-2 border-[#6c5dd3] p-1">
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-[#6c5dd3] to-[#302c59] overflow-hidden">
+                    <img
+                      src="face.webp"
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="text-center mb-3">
+                <h3 className="text-sm font-semibold text-white mb-1">Chitransh Srivastava</h3>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  <span className="text-[10px] bg-[#6c5dd3]/20 text-[#6c5dd3] px-2 py-0.5 rounded-full">Full Stack Dev</span>
+                  <span className="text-[10px] bg-[#6c5dd3]/20 text-[#6c5dd3] px-2 py-0.5 rounded-full">AI Engineer</span>
+                </div>
+              </div>
+              <div className="space-y-2 text-center">
+                <div className="text-[10px] text-gray-400">
+                  🌍 Remote
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  💼 Open to opportunities
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  🎯 Building the future with code
+                </div>
+              </div>
+            </div>
+          </div>
 
-    let side = Math.random() > 0.5 ? 'left' : 'right';
-    let vertical = Math.random() > 0.5 ? 'top' : 'bottom';
+          {/* Social Media Card */}
+          <div
+            className="absolute top-[5%] right-[25%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 0.2s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[220px] opacity-100 group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <Share2 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Connect With Me</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Social</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <a href="https://github.com/ChitranshS" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <Github className="h-4 w-4" />
+                  <span className="text-xs">Github</span>
+                </a>
+                <a href="https://www.linkedin.com/in/chitransh-srivastava-ai/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <Linkedin className="h-4 w-4" />
+                  <span className="text-xs">LinkedIn</span>
+                </a>
+                <a href="https://twitter.com/ChitranshS" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <Twitter className="h-4 w-4" />
+                  <span className="text-xs">Twitter</span>
+                </a>
+                <a href="https://drive.google.com/file/d/1_y4Z950ODSpSFMoVVoyW8YJWJptp8RL3/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <FileDown className="h-4 w-4" />
+                  <span className="text-xs">Resume</span>
+                </a>
+              </div>
+            </div>
+          </div>
 
-    let x, y;
-    do {
-      x = getRandomValue();
-      y = getRandomValue();
-    } while (vertical === 'top' && y === 60 && side === 'right' && x === 80); // Avoid forbidden combination
+          {/* AI Card */}
+          <div
+            className="absolute top-[15%] right-[15%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 0.4s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[220px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                  <Cpu className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">AI & ML Skills</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">PyTorch</span>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">TensorFlow</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mb-2">Building intelligent systems and exploring AI frontiers.</p>
+              <div className="flex flex-wrap gap-1">
+                <div className="text-[10px] flex items-center gap-1 text-gray-500">
+                  <span>ML:</span>
+                  <span className="text-purple-400">▓▓▓▓▓▓▓░░░</span>
+                </div>
+                <div className="text-[10px] flex items-center gap-1 text-gray-500">
+                  <span>AI:</span>
+                  <span className="text-purple-400">▓▓▓▓▓▓▓▓░░</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    const newPosition = { x, y };
-    positionHistory.add(newPosition);
+          {/* Full Stack Card */}
+          <div
+            className="absolute bottom-[15%] right-[15%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 0.6s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[220px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                  <Code2 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Full Stack Dev</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">React</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">Node.js</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">Python</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mb-2">Creating seamless experiences from frontend to backend.</p>
+              <div className="space-y-1">
+                <div className="text-[10px] flex items-center gap-1 text-gray-500">
+                  <span>Frontend:</span>
+                  <span className="text-emerald-400">▓▓▓▓▓▓▓▓░░</span>
+                </div>
+                <div className="text-[10px] flex items-center gap-1 text-gray-500">
+                  <span>Backend:</span>
+                  <span className="text-emerald-400">▓▓▓▓▓▓▓░░░</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    return `${side}-${newPosition.x} ${vertical}-${newPosition.y}`;
-  };
+          {/* Projects Card */}
+          <div
+            className="absolute bottom-[15%] left-[15%] transform transition-all duration-500 hover:scale-110 group md:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 0.8s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[240px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                  <Code2 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Projects</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">React</span>
+                    <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">AI/ML</span>
+                    <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Cloud</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <h4 className="text-xs font-semibold text-green-400">ChitsGPT</h4>
+                  <p className="text-[10px] text-gray-400">Smart Resume Assistant</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-green-400">ClipSurf</h4>
+                  <p className="text-[10px] text-gray-400">Video Content Discovery Engine</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-green-400">SummaView</h4>
+                  <p className="text-[10px] text-gray-400">AI-Web Extension for YouTube</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Experience Card */}
+          <div
+            className="absolute top-[50%] right-[20%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 1s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[240px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                  <Briefcase className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Experience</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full">ML/AI</span>
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full">Cloud</span>
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full">LLMs</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <h4 className="text-xs font-semibold text-indigo-400">GoMarble.ai</h4>
+                  <p className="text-[10px] text-gray-400">Data Science Intern • May '24 - Nov '24</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-indigo-400">L&T Defence</h4>
+                  <p className="text-[10px] text-gray-400">ML Intern • Feb '24 - Aug '24</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tech Stack Card */}
+          <div
+            className="absolute top-[50%] right-[5%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 1.2s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[240px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+                  <Code2 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Tech Stack</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-teal-500/20 text-teal-400 px-2 py-0.5 rounded-full">Core</span>
+                    <span className="text-[10px] bg-teal-500/20 text-teal-400 px-2 py-0.5 rounded-full">Tools</span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <h4 className="text-xs font-semibold text-teal-400 mb-1">Languages</h4>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1">
+                      <div className="h-1 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                        <div className="h-full w-[95%] bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
+                      </div>
+                      <span className="text-[10px] text-gray-400">Python</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                        <div className="h-full w-[90%] bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
+                      </div>
+                      <span className="text-[10px] text-gray-400">TypeScript</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                        <div className="h-full w-[85%] bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
+                      </div>
+                      <span className="text-[10px] text-gray-400">Go</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-teal-400 mb-1">Tools</h4>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1">
+                      <div className="h-1 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                        <div className="h-full w-[95%] bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
+                      </div>
+                      <span className="text-[10px] text-gray-400">React</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                        <div className="h-full w-[90%] bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
+                      </div>
+                      <span className="text-[10px] text-gray-400">AWS</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                        <div className="h-full w-[85%] bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
+                      </div>
+                      <span className="text-[10px] text-gray-400">Docker</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Education Card */}
+          <div
+            className="absolute top-[50%] left-[5%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 1.4s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[220px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                  <GraduationCap className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Education</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">B.Tech</span>
+                    <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">AI&ML</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <h4 className="text-xs font-semibold text-orange-400">MSRIT Bengaluru</h4>
+                  <p className="text-[10px] text-gray-400">2021 - 2025 • CGPA: 8.32</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fun Facts Card */}
+          <div
+            className="absolute top-[5%] left-[20%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 1.6s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[220px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Fun Facts</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">Random</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-[10px] text-gray-400">
+                  <ul className="space-y-1">
+                    <li>• Can solve Rubik's cube in under 30s</li>
+                    <li>• Favorite IDE Theme: Tokyo Night</li>
+                    <li>• Loves stargazing 🌟</li>
+                    <li>• Prefers Linux over Windows 😉</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Status Card */}
+          <div
+            className="absolute top-[10%] left-[5%] transform transition-all duration-500 hover:scale-110 group hidden lg:block"
+            style={{
+              animation: `float 7s ease-in-out infinite 1.8s`,
+            }}
+          >
+            <div className="bg-[#1a1c26]/90 backdrop-blur-lg p-4 rounded-xl border border-[#6c5dd3]/20 shadow-xl hover:shadow-[#6c5dd3]/20 hover:border-[#6c5dd3]/40 transition-all duration-300 max-w-[220px] opacity-30 blur-[1px] group-hover:opacity-100 group-hover:blur-none">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Current Status</h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">Active</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-[10px] text-gray-400">
+                  <p className="mb-1">• Working on: Portfolio Website</p>
+                  <p className="mb-1">• Learning: Rust Programming</p>
+                  <p>• Energy Level: 85% ⚡</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="relative z-10">
+        <div className="mb-12">
+          <Logo />
+          <h3 className="text-md text-gray-500 mt-6 text-center">
+            <TextGenerateEffect words={words} className="text-sm text-gray-500" />
+          </h3>
+        </div>
+        <div className="w-full max-w-4xl px-4">
+          <div className="w-full max-w-xs sm:max-w-sm relative mb-5 mx-auto block">
+            <button
+              onClick={() => setIsChatMode(!isChatMode)}
+              className={`w-full bg-gray-900 p-4 rounded-full text-sm flex items-center justify-between transition-all duration-300 
+    ${isChatMode
+                  ? 'text-gray-300 scale-90 bg-gradient-to-r from-violet-600 to-indigo-600 shadow-lg'
+                  : 'text-gray-400 hover:bg-gray-800 border-2 border-[#6c5dd3] hover:border-[#6c5dd3] hover:bg-gradient-to-r hover:from-violet-600/10 hover:to-indigo-600/10'}`}
+            >
+              <span className={`transition-transform duration-300 font-semibold
+    ${isChatMode ? 'scale-110 text-white' : ''}`}>
+                Chat Mode
+              </span>
+
+              {/* Toggle Switch */}
+              <div className={`w-10 h-5 rounded-full relative transition-all duration-300 
+    ${isChatMode ? 'bg-white bg-opacity-10 scale-110' : 'bg-gray-600 bg-opacity-30'}`}>
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-md 
+      ${isChatMode
+                    ? 'translate-x-5 bg-white'
+                    : 'translate-x-0 bg-gray-400'}`}
+                />
+              </div>
+            </button>
+          </div>
+
+          {isChatMode && (
+            <>
+              <div className="relative mb-16 max-w-2xl mx-auto">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
+                <BackgroundGradient className="rounded-full w-full">
+                  <ChatInput
+                    onSendMessage={(messageText) => {
+                      if (!currentChat) {
+                        createNewChat(messageText);
+                      } else {
+                        onSendMessage(messageText);
+                      }
+                    }}
+                    isLoading={isLoading}
+                    className="w-full"
+                  />
+                </BackgroundGradient>
+              </div>
+              <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
+              {renderSection()}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const ChatDecorations = () => (
+    <>
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-12 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float">
+            <Code2 className="h-4 w-4 text-[#6c5dd3]" />
+            <span className="text-xs text-gray-400">Coding in progress...</span>
+          </div>
+        </div>
+
+        <div className="absolute top-16 right-8 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-500">
+            <Coffee className="h-4 w-4 text-yellow-500" />
+            <span className="text-xs text-gray-400">Coffee level: 100%</span>
+          </div>
+        </div>
+
+        <div className="absolute bottom-24 left-8 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1000">
+            <Music className="h-4 w-4 text-green-500" />
+            <span className="text-xs text-gray-400">Lofi beats playing</span>
+          </div>
+        </div>
+
+        <div className="absolute bottom-32 right-8 hidden lg:block">
+          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1500">
+            <Heart className="h-4 w-4 text-pink-500" />
+            <span className="text-xs text-gray-400">Built with ❤️</span>
+          </div>
+        </div>
+      </div>
+
+    </>
+  );
 
   const renderSection = () => {
     switch (activeSection) {
@@ -444,244 +953,64 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         return null;
     }
   };
-  const funPos = ["left-2 top-1/2", "right-2 top-1/2"];
-  const funRandom = funPos[Math.floor(Math.random() * funPos.length)];
-
-  const EmptyState = () => (
-    <div className="relative h-full flex flex-col items-center justify-center p-4 md:p-10">
-      {/* <FloatingWidget 
-        icon={<Coffee className="h-4 w-4 text-amber-500" />} 
-        text="Coffee Driven"
-        position="bottom-20 left-40"
-        delay={0}
-      />
-      <FloatingWidget 
-        icon={<Heart className="h-4 w-4 text-pink-500" />} 
-        text="Loves Open Source"
-        position={getRandomPosition()}
-        delay={0.3}
-      />
-      <FloatingWidget 
-        icon={<Cpu className="h-4 w-4 text-purple-500" />} 
-        text="AI Enthusiast"
-        position={getRandomPosition()}
-        delay={0.6}
-      />
-      <FloatingWidget 
-        icon={<Puzzle className="h-4 w-4 text-blue-500" />} 
-        text="Algorithm Lover"
-        position={getRandomPosition()}
-        delay={0.9}
-      />
-      <FloatingWidget 
-        icon={<Code2 className="h-4 w-4 text-emerald-500" />} 
-        text="Clean Code"
-        position={getRandomPosition()}
-        delay={1.2}
-      />
-      <FloatingWidget 
-        icon={<Briefcase className="h-4 w-4 text-indigo-500" />} 
-        text="Full Stack Dev"
-        position={getRandomPosition()}
-        delay={1.5}
-      />
-      <FloatingWidget 
-        icon={<HelpCircle className="h-4 w-4 text-orange-500" />} 
-        text="Problem Solver"
-        position={getRandomPosition()}
-        delay={1.8}
-      />
-      <FloatingWidget 
-        icon={<Music className="h-4 w-4 text-green-500" />} 
-        text="Coding Playlist"
-        position={getRandomPosition()}
-        delay={2.1}
-      />
-      <FloatingWidget 
-        icon={<Gamepad2 className="h-4 w-4 text-red-500" />} 
-        text="Gaming Enthusiast"
-        position={getRandomPosition()}
-        delay={2.4}
-      /> */}
-      {/* <div className={`absolute ${funRandom} hidden lg:inline-block opacity-60`}>
-        <div className="bg-[#1a1c26] p-4 rounded-xl">
-          <div className="text-sm text-gray-400 mb-2">Fun Facts</div>
-          <div className="space-y-2">
-            {funFacts.map((fact, idx) => (
-              <div 
-                key={idx}
-                className="text-sm p-2 rounded bg-[#12141c] hover:bg-[#6c5dd3] hover:bg-opacity-20 
-                  transition-all duration-300 cursor-pointer"
-              >
-                {fact}
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div> */}
-
-      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob" />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000" />
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000" />
-      </div> */}
-
-      <div className="relative z-10">
-        <div className="mb-12">
-          <Logo />
-          <h3 className="text-md text-gray-500 mt-6 text-center">
-            <TextGenerateEffect words={words} className="text-sm text-gray-500" />
-          </h3>
-        </div>
-        <div className="w-full max-w-4xl px-4">
-          <div className="w-full max-w-xs sm:max-w-sm relative mb-5 mx-auto block">
-            <button
-              onClick={() => setIsChatMode(!isChatMode)}
-              className={`w-full bg-gray-900 p-4 rounded-full text-sm flex items-center justify-between transition-all duration-300 
-    ${isChatMode
-                  ? 'text-gray-300 scale-90 bg-gradient-to-r from-purple-600 to-purple-800 shadow-lg'
-                  : 'text-gray-400 hover:bg-gray-800'}`}
-            >
-              <span className={`transition-transform duration-300 font-semibold
-    ${isChatMode ? 'scale-110 text-white' : ''}`}>
-                Chat Mode
-              </span>
-
-              {/* Toggle Switch */}
-              <div className={`w-10 h-5 rounded-full relative transition-colors duration-300 
-    ${isChatMode ? 'bg-white bg-opacity-10 scale-110' : 'bg-gray-600 bg-opacity-30'}`}>
-                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-md 
-      ${isChatMode
-                    ? 'translate-x-5 bg-white'
-                    : 'translate-x-0 bg-gray-400'}`}
-                />
-              </div>
-            </button>
-          </div>
-
-          {isChatMode && (
-            <>
-              <div className="relative mb-16 max-w-2xl mx-auto">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-                <BackgroundGradient className="rounded-full w-full">
-                  <ChatInput
-                    onSendMessage={(messageText) => {
-                      if (!currentChat) {
-                        createNewChat(messageText);
-                      } else {
-                        onSendMessage(messageText);
-                      }
-                    }}
-                    isLoading={isLoading}
-                    className="w-full"
-                  />
-                </BackgroundGradient>
-              </div>
-              <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
-              {renderSection()}
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const ChatDecorations = () => (
-    <>
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-12 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float">
-            <Code2 className="h-4 w-4 text-[#6c5dd3]" />
-            <span className="text-xs text-gray-400">Coding in progress...</span>
-          </div>
-        </div>
-
-        <div className="absolute top-16 right-8 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-500">
-            <Coffee className="h-4 w-4 text-yellow-500" />
-            <span className="text-xs text-gray-400">Coffee level: 100%</span>
-          </div>
-        </div>
-
-        <div className="absolute bottom-24 left-8 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1000">
-            <Music className="h-4 w-4 text-green-500" />
-            <span className="text-xs text-gray-400">Lofi beats playing</span>
-          </div>
-        </div>
-
-        <div className="absolute bottom-32 right-8 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1500">
-            <Heart className="h-4 w-4 text-pink-500" />
-            <span className="text-xs text-gray-400">Built with ❤️</span>
-          </div>
-        </div>
-
-        {/* <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6c5dd3] rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob" />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-2000" />
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-blob animation-delay-4000" /> */}
-      </div>
-
-      {/* <div className="fixed top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" />
-      <div className="fixed top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-500 to-transparent opacity-10 pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-500 to-transparent opacity-10 pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-[#6c5dd3] to-transparent opacity-10 pointer-events-none" /> */}
-    </>
-  );
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8 flex items-start justify-center">
+    <div className="flex flex-col h-screen bg-transparent animate-fade-in animation-delay-500">
+      <style jsx global>{`
+        @keyframes float {
+          0% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+          100% {
+            transform: translateY(0px);
+          }
+        }
+      `}</style>
       {currentChat?.messages?.length > 0 && <ChatDecorations />}
-      <div className="w-full max-w-4xl px-4 transition-all duration-300 ease-in-out">
-        <div className="w-full max-w-sm relative mb-5 mx-auto block">
-          <button
-            onClick={() => setIsChatMode(!isChatMode)}
-            className={`w-full bg-gray-900 p-4 rounded-full text-sm flex items-center justify-between transition-all duration-300 
-              ${isChatMode
-                ? 'text-gray-300 scale-90 bg-gradient-to-r from-purple-600 to-purple-800 shadow-lg'
-                : 'text-gray-400 hover:bg-gray-800'}`}
-          >
-            <span className={`transition-transform duration-300 font-semibold
-              ${isChatMode ? 'scale-110 text-white' : ''}`}>
-              Chat Mode
-            </span>
+      <ScrollArea className="flex-1 px-4 md:px-8 pt-16 [&_.scrollbar-thumb]:bg-transparent [&_.scrollbar-track]:bg-transparent">
+        {currentChat?.messages?.length ? (
+          <div className="mx-auto max-w-4xl space-y-6">
+            {currentChat?.messages?.map((msg, idx) => {
+              const firstAssistantIndex = currentChat.messages.findIndex(m => m.role === 'assistant');
+              const isFirstAssistantMessage = idx === firstAssistantIndex;
 
-            {/* Toggle Switch */}
-            <div className={`w-10 h-5 rounded-full relative transition-colors duration-300 
-              ${isChatMode ? 'bg-white bg-opacity-10 scale-110' : 'bg-gray-600 bg-opacity-30'}`}>
-              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-md 
-                ${isChatMode
-                  ? 'translate-x-5 bg-white'
-                  : 'translate-x-0 bg-gray-400'}`}
-              />
-            </div>
-          </button>
-        </div>
-
-        {/* Content Section */}
-        <div className={`w-full transition-all duration-500 ease-out 
-          ${isChatMode ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="relative mb-16 max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-            <BackgroundGradient className="rounded-full w-full">
-              <ChatInput
-                onSendMessage={(messageText) => {
-                  if (!currentChat) {
-                    createNewChat(messageText);
-                  } else {
-                    onSendMessage(messageText);
-                  }
-                }}
-                isLoading={isLoading}
-                className="w-full pl-12"
-              />
-            </BackgroundGradient>
+              return (
+                <ChatMessage
+                  key={idx}
+                  msg={msg}
+                  index={idx}
+                  expanded={!!expandedMessages[idx]}
+                  onToggle={() => toggleMessage(idx)}
+                  isFirstAssistantMessage={isFirstAssistantMessage}
+                />
+              );
+            })}
+            <div ref={messagesEndRef} />
           </div>
-          <PromptNav {...{ onSectionChange: setActiveSection, activeSection }} />
-          {renderSection()}
+        ) : (
+          <EmptyState />
+        )}
+      </ScrollArea>
+
+      {currentChat?.messages?.length > 0 && (
+        <div className="border-t border-[#1a0c26] p-5 bg-[#0a0a0a] backdrop-blur-sm w-full">
+          <div className="max-w-2xl mx-auto">
+            <ChatInput
+              onSendMessage={(messageText) => {
+                if (!currentChat) {
+                  createNewChat(messageText);
+                } else {
+                  onSendMessage(messageText);
+                }
+              }}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
