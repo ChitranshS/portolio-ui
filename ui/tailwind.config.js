@@ -7,7 +7,7 @@ module.exports = {
       animation: {
         'fadeIn': 'fadeIn 0.3s ease-in',
         'slideIn': 'slideIn 0.3s ease-out',
-        shimmer: "shimmer 2s linear infinite",
+        'shimmer': "shimmer 2s linear infinite",
         'float': 'float 20s ease-in-out infinite',
         'float-delay': 'float 25s ease-in-out infinite reverse',
         'blob': 'blob 10s infinite',
@@ -18,7 +18,7 @@ module.exports = {
           '100%': { opacity: '1' },
         },
         slideIn: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '0%': { transform: 'translateY(-20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
         shimmer: {
