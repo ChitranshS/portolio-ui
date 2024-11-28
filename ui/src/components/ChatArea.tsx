@@ -362,7 +362,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
           {/* Profile Card */}
           <div
-            className="absolute top-[15%] left-[15%] transform transition-all duration-500 hover:scale-110 group md:block"
+            className=" opacity-100 w-[280px] absolute top-[15%] left-[15%] transform transition-all duration-500 hover:scale-110 group md:block"
             style={{
               animation: `float 7s ease-in-out infinite 0s`,
             }}
@@ -432,7 +432,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                   <Twitter className="h-4 w-4" />
                   <span className="text-xs">Twitter</span>
                 </a>
-                <a href="https://drive.google.com/file/d/1_y4Z950ODSpSFMoVVoyW8YJWJptp8RL3/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                <a href="https://drive.google.com/file/d/1OOjEX-3X99t_DODpSYxprugRsCZDRNqx/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                   <FileDown className="h-4 w-4" />
                   <span className="text-xs">Resume</span>
                 </a>
