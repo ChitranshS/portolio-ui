@@ -22,8 +22,58 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 load_dotenv()
 def query_handler(data_obj):
     try:
+        visioncors = """
+        VisionCORS is an American Sign Language (ASL) interpreter that converts hand gestures into text and speech, with potential for bidirectional translation. The project addresses communication barriers faced by deaf and mute individuals, aiming to create a more accessible and inclusive digital communication platform.
+        Key challenges included:
+
+        Choosing ASL over Indian Sign Language due to regional dialect variations
+        Creating a custom dataset for 14 alphabets due to limited existing resources
+        Addressing lighting and gesture similarity issues through data augmentation
+        Optimizing model accuracy while developing deployment infrastructure
+
+        The goal is to mainstream sign language interpretation technology, reducing dependency on manual interpretation and fostering better integration of deaf/mute individuals in daily communication.
+        Link to submission:https://devfolio.co/projects/visioncors-asl-sign-interpreter-80fb
+        
+        """
+        smartindiahackathon = """
+            Title: AI-Powered CCTV Enhancement System for Railway Safety and Operations
+
+            Project Overview:
+            Leveraging existing CCTV infrastructure with AI/ML capabilities to create a comprehensive railway station management system focusing on safety, efficiency, and passenger experience.
+
+            Key Features:
+
+            Security & Safety
+            Real-time anomaly and threat detection
+            Crowd density monitoring and flow management
+            Track trespassing alerts (humans/animals)
+            Emergency incident response system
+            Operations Optimization
+            Automated staff allocation and monitoring
+            Smart energy management based on occupancy
+            Waste management optimization
+            Resource utilization tracking
+            Passenger Services
+            Special needs passenger identification and assistance
+            Sentiment analysis for service improvement
+            Automated accessibility guidance
+            Technical Infrastructure
+            Interactive analytics dashboard
+            Edge computing integration for real-time processing
+            End-to-end data encryption
+            Privacy-compliant monitoring systems
+            System Benefits:
+
+            Enhanced security through proactive threat detection
+            Improved operational efficiency via automated monitoring
+            Better passenger experience through smart assistance
+            Reduced energy consumption through adaptive management
+            Real-time decision support for station management
+
+
+        """
         # query_embeddings = generate_embeddings(query)
-        RESUME = """
+        RESUME = f"""
             ---
 
             **Chitransh Srivastava**  
@@ -145,6 +195,18 @@ def query_handler(data_obj):
         PostgreSQL
         MongoDB
         Vector Databases
+
+
+
+        Hackathons I participated in:
+        1. Centuriton in my 1st year of college 
+            - I participated in Centuriton and create a VisionCors:
+              {visioncors}
+        2. Smart India Hackathon in my 2nd year of college
+            - I participated the hackathon and create a Smart Surveillance System for the Railways.
+              {smartindiahackathon}
+        4. Currently participating in Atlassian CodeGeist.
+
         """
         
         # resume_embeddings = generate_embeddings(RESUME)
@@ -202,6 +264,7 @@ def query_handler(data_obj):
                 - Stay within the bounds of provided information
                 - Keep responses authentic and professionally engaging
                 - Use emojis where appropriate.
+                - When asked about a hackathon, mention the hackathon name and its details.
                 - When mentioning a project or github repo, provide a link to it.
                 - You have to greet the user using my name on the first message.
                 - You have to return the output strictly in markdown format. The markdown also should highlight the important information in the resume.It should also be structured in a way that is easy to read and understand.

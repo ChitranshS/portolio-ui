@@ -82,6 +82,7 @@ const QuickPrompts = [
     description: "Academic background and skills",
     prompt: "Tell me about your education"
   },
+  
 ];
 
 const GamePrompts = [
@@ -124,6 +125,7 @@ const ProfessionalPrompts = [
     description: "Discover my technical skills and areas of expertise",
     prompt: "What are your technical skills and expertise?"
   }
+  
 ];
 
 const ChatMessage: React.FC<{

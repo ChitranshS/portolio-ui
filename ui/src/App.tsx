@@ -187,9 +187,9 @@ function MainApp() {
             reject(new Error('TIMEOUT'));
           }, 35000); // 35 seconds timeout
         });
-
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         // Create the fetch promise
-        const fetchPromise = fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
+        const fetchPromise = fetch(`${apiUrl}/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
