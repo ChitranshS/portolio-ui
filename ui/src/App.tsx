@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ProfileDropdown from './components/ProfileDropdown';
-import { PanelLeftClose, PanelLeft } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, ArrowLeft } from 'lucide-react';
 import { Chat, Message, MessageRole, StreamMessage, DBQueryResult, convertDBMessagesToChat } from './types';
 // import ProfileModal from './components/ProfileModal';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,6 +12,7 @@ import { config } from 'dotenv'
 import { threadStorage } from './lib/threadStorage';
 import GlobalChats from './pages/GlobalChats';
 import AnimatedBackground from './components/AnimatedBackground';
+import NotFound from './pages/NotFound';
 
 function MainApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -133,6 +134,13 @@ function MainApp() {
   }, []);
 
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {
+    // Word count validation
+    const wordCount = message.trim().split(/\s+/).length;
+    if (wordCount > 100) {
+      alert('Please keep your message under 100 words for better responses.');
+      return;
+    }
+
     if (isLoading) return;
     
     try {
@@ -389,7 +397,7 @@ function MainApp() {
 
         {/* Main Content Area */}
         <div className="flex-1 relative w-full max-w-full">
-          <div className="relative h-full">
+          <div className="relative min-h-screen">
             <div className="absolute top-4 right-4 z-40">
               <ProfileDropdown />
             </div>
@@ -397,6 +405,18 @@ function MainApp() {
               <div className="absolute top-4 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-[#6c5dd3] rounded-full text-xs text-white opacity-50">
                 Global View
               </div>
+            )}
+            {currentChat && (
+              <button
+                onClick={() => {
+                  setCurrentChat(null);
+                  createNewChat();
+                }}
+                className="absolute top-4 left-20 z-40 p-2 rounded-lg bg-[#12141c] hover:bg-[#282c3a] transition-colors"
+                aria-label="Back to new chat"
+              >
+                <ArrowLeft className="h-5 w-5 text-gray-400" />
+              </button>
             )}
             <ChatArea
               currentChat={currentChat}
@@ -417,6 +437,7 @@ function App() {
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/global" element={<GlobalChats />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
