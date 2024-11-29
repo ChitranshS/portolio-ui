@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware  # Add this import
 from dotenv import load_dotenv
 import os
 from rag.logic import query_handler
-from utils.postgres import connection_pool, get_connection, cleanup_pool
+from utils.postgres import connection_pool, get_connection, return_connection, cleanup_pool
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from utils.postgres import startup_event , cleanup_pool
@@ -60,7 +60,7 @@ async def handle_chat(request: Request):
             )
             raise handler
    
-       
+
 
 @app.post("/add_resume")
 async def handle_resume(request: Request):
@@ -112,6 +112,132 @@ async def root():
 async def health():
     return {'status': 'healthy'}
 
+@app.post("/get_messages")
+async def get_messages(request: Request):
+    try:
+        data = await request.json()
+        thread_ids = data.get('thread_ids', [])
+        is_global = data.get('is_global', False)
+
+        conn = get_connection(connection_pool)
+        try:
+            if thread_ids:
+                # Get messages for specific threads
+                query = """
+                    WITH LastSteps AS (
+                        SELECT 
+                            metadata->>'thread_id' as thread_id, 
+                            MAX((metadata->>'step')::integer) as max_step
+                        FROM checkpoints
+                        WHERE metadata->>'thread_id' = ANY(%s::text[])
+                        GROUP BY metadata->>'thread_id'
+                    )
+                    SELECT 
+                        metadata -> 'writes' as query,
+                        metadata->>'thread_id' as thread_id
+                    FROM checkpoints c
+                    INNER JOIN LastSteps ls 
+                        ON c.metadata->>'thread_id' = ls.thread_id 
+                        AND (c.metadata->>'step')::integer = ls.max_step
+                    ORDER BY ls.max_step DESC
+                """
+                with conn.cursor() as cur:
+                    cur.execute(query, (thread_ids,))
+                    result = cur.fetchall()
+            else:
+                # For global view
+                if is_global:
+                    query = """
+                        WITH LastSteps AS (
+                            SELECT 
+                                metadata->>'thread_id' as thread_id, 
+                                MAX((metadata->>'step')::integer) as max_step
+                            FROM checkpoints
+                            GROUP BY metadata->>'thread_id'
+                        )
+                        SELECT 
+                            metadata -> 'writes' as query,
+                            metadata->>'thread_id' as thread_id
+                        FROM checkpoints c
+                        INNER JOIN LastSteps ls 
+                            ON c.metadata->>'thread_id' = ls.thread_id 
+                            AND (c.metadata->>'step')::integer = ls.max_step
+                        ORDER BY ls.max_step DESC
+                        LIMIT 100
+                    """
+                    with conn.cursor() as cur:
+                        cur.execute(query)
+                        result = cur.fetchall()
+                else:
+                    return {"messages": [], "status": "success"}
+
+            # Convert result to list of dicts
+            messages = []
+            for row in result:
+                messages.append({
+                    "query": row[0],  # writes
+                    "thread_id": row[1]  # thread_id
+                })
+            return {"messages": messages, "status": "success"}
+
+        finally:
+            return_connection(connection_pool, conn)
+
+    except Exception as e:
+        logger.error(f"Error fetching messages: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "message": "Failed to fetch messages",
+                "error": str(e)
+            }
+        )
+
+@app.post("/messages")
+async def store_message(request: Request):
+    try:
+        data = await request.json()
+        if not (data.get('thread_id') and data.get('step') and 'writes' in data):
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "status": "error",
+                    "message": "Missing required fields"
+                }
+            )
+
+        async with get_connection() as conn:
+            query = """
+                INSERT INTO checkpoints (metadata)
+                VALUES ($1)
+                RETURNING id
+            """
+            metadata = {
+                'thread_id': data['thread_id'],
+                'step': data['step'],
+                'writes': data['writes']
+            }
+            result = await conn.fetchval(query, metadata)
+            
+            return {
+                "status": "success",
+                "message": "Message stored successfully",
+                "id": result
+            }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error storing message: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "message": "Failed to store message",
+                "error": str(e)
+            }
+        )
 
 # if __name__ == "__main__":
 #     import uvicorn
