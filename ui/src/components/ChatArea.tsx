@@ -342,7 +342,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             <div className="absolute top-4 transform -translate-x-1/2 z-50 animate-slideIn">
               <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 rounded-full border border-emerald-400/50 shadow-lg shadow-emerald-500/20 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-white" />
-                <span className="text-xs text-white font-medium">New: Improved UI and message threading!</span>
+                <span className="text-xs text-white font-medium">New: Fixed chat history and message threading!</span>
                 <button onClick={() => setShowUpdateNotification(false)} className="text-white hover:text-gray-300 transition-colors">
                   <X className="h-4 w-4" />
                 </button>
