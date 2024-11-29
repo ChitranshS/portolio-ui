@@ -230,6 +230,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [isChatMode, setIsChatMode] = useState(false);
   const [showHoverNotification, setShowHoverNotification] = useState(false);
   const [showChatNotification, setShowChatNotification] = useState(false);
+  const [showUpdateNotification, setShowUpdateNotification] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -336,9 +337,22 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       {/* Floating Cards - Only show when chat mode is off */}
       {!isChatMode && (
         <>
+          {/* Update Notification */}
+          {showUpdateNotification && (
+            <div className="absolute top-4 transform -translate-x-1/2 z-50 animate-slideIn">
+              <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 rounded-full border border-emerald-400/50 shadow-lg shadow-emerald-500/20 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-white" />
+                <span className="text-xs text-white font-medium">New: Improved UI and message threading!</span>
+                <button onClick={() => setShowUpdateNotification(false)} className="text-white hover:text-gray-300 transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Hover Notification */}
           {showHoverNotification && (
-            <div className="absolute top-6 transform -translate-x-1/2 z-50 animate-slideIn ">
+            <div className="absolute top-14 transform -translate-x-1/2 z-50 animate-slideIn">
               <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 rounded-full border border-violet-400/50 shadow-lg shadow-violet-500/20 flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-white" />
                 <span className="text-xs text-white font-medium">Hover over the cards to explore more about me!</span>
@@ -349,7 +363,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             </div>
           )}
           {showChatNotification && (
-            <div className="absolute top-16 transform -translate-x-1/2 z-50 animate-slideIn opacity-0">
+            <div className="absolute top-24 transform -translate-x-1/2 z-50 animate-slideIn">
               <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 rounded-full border border-violet-400/50 shadow-lg shadow-violet-500/20 flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-white" />
                 <span className="text-xs text-white font-medium">Try out the chat mode!</span>
@@ -532,15 +546,36 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               </div>
               <div className="space-y-2">
                 <div>
-                  <h4 className="text-xs font-semibold text-green-400">ChitsGPT</h4>
+                  <a 
+                    href="https://chat-ui-242842293866.asia-south1.run.app/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    ChitsGPT
+                  </a>
                   <p className="text-[10px] text-gray-400">Smart Resume Assistant</p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-green-400">ClipSurf</h4>
+                  <a 
+                    href="https://clip-surf.vercel.app/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    ClipSurf
+                  </a>
                   <p className="text-[10px] text-gray-400">Video Content Discovery Engine</p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-green-400">SummaView</h4>
+                  <a 
+                    href="https://github.com/ChitranshS/SummaView-Youtube-Extension/tree/main" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    SummaView
+                  </a>
                   <p className="text-[10px] text-gray-400">AI-Web Extension for YouTube</p>
                 </div>
               </div>
@@ -808,28 +843,28 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     <>
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-20 left-12 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float">
+          <div className="bg-[#1a0c26] p-3 rounded-full flex items-center gap-2 animate-float">
             <Code2 className="h-4 w-4 text-[#6c5dd3]" />
             <span className="text-xs text-gray-400">Coding in progress...</span>
           </div>
         </div>
 
         <div className="absolute top-16 right-8 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-500">
+          <div className="bg-[#1a0c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-500">
             <Coffee className="h-4 w-4 text-yellow-500" />
             <span className="text-xs text-gray-400">Coffee level: 100%</span>
           </div>
         </div>
 
         <div className="absolute bottom-24 left-8 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1000">
+          <div className="bg-[#1a0c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1000">
             <Music className="h-4 w-4 text-green-500" />
             <span className="text-xs text-gray-400">Lofi beats playing</span>
           </div>
         </div>
 
         <div className="absolute bottom-32 right-8 hidden lg:block">
-          <div className="bg-[#1a1c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1500">
+          <div className="bg-[#1a0c26] p-3 rounded-full flex items-center gap-2 animate-float animation-delay-1500">
             <Heart className="h-4 w-4 text-pink-500" />
             <span className="text-xs text-gray-400">Built with ❤️</span>
           </div>

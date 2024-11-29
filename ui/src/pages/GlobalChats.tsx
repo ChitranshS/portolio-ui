@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { neon } from '@neondatabase/serverless';
 import { Chat, MessageRole } from '../types';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Search, MessageSquare, Clock, Trash2, AlertCircle } from 'lucide-react';
@@ -17,64 +16,50 @@ function GlobalChats() {
   const fetchGlobalChats = async () => {
     try {
       setIsLoading(true);
-      if (!import.meta.env.VITE_DATABASE_URL) {
-        throw new Error('Database URL is not defined in environment variables');
-      }
-      const sql = neon(import.meta.env.VITE_DATABASE_URL);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      const posts = await sql`
-        WITH LastSteps AS (
-          SELECT 
-            metadata->>'thread_id' as thread_id, 
-            MAX((metadata->>'step')::integer) as max_step
-          FROM checkpoints
-          GROUP BY metadata->>'thread_id'
-        )
-        SELECT 
-          metadata -> 'writes' as query,
-          metadata->>'thread_id' as thread_id
-        FROM checkpoints c
-        INNER JOIN LastSteps ls 
-          ON c.metadata->>'thread_id' = ls.thread_id 
-          AND (c.metadata->>'step')::integer = ls.max_step
-        ORDER BY ls.max_step DESC
-        LIMIT 100
-      `;
+      const response = await fetch(`${apiUrl}/get_messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          is_global: true
+        })
+      });
 
+      if (!response.ok) {
+        throw new Error('Failed to fetch global chats');
+      }
+
+      const data = await response.json();
       const seenMessages = new Set();
       const uniqueChats: Chat[] = [];
 
-      posts.forEach((post, index) => {
+      data.messages.forEach((post: any, index: number) => {
         if (post?.query?.model?.messages) {
           const dbMessages = post.query.model.messages;
           const threadId = post.thread_id;
 
-          const isPingRequest = dbMessages.some(msg => 
-            msg.kwargs.content.trim() === "Respond with OKAY only" || 
-            threadId === "pinging_123"
-          );
-          
-          if (!isPingRequest) {
-            const chatHash = JSON.stringify(dbMessages.map(msg => ({
-              content: msg.kwargs.content.trim(),
-              type: msg.kwargs.type
-            })));
-    
-            if (!seenMessages.has(chatHash)) {
-              seenMessages.add(chatHash);
-              const messages = dbMessages.map(msg => ({
-                content: msg.kwargs.content,
-                role: msg.kwargs.type === 'human' ? MessageRole.User : MessageRole.Assistant,
-                timestamp: new Date().toISOString()
-              }));
-              
-              uniqueChats.push({
-                id: Date.now() - (index * 1000),
-                threadId,
-                title: messages[0]?.content?.slice(0, 100) || 'Chat',
-                messages
-              });
-            }
+          const chatHash = JSON.stringify(dbMessages.map((msg: any) => ({
+            content: msg.kwargs.content.trim(),
+            type: msg.kwargs.type
+          })));
+  
+          if (!seenMessages.has(chatHash)) {
+            seenMessages.add(chatHash);
+            const messages = dbMessages.map((msg: any) => ({
+              content: msg.kwargs.content,
+              role: msg.kwargs.type === 'human' ? MessageRole.User : MessageRole.Assistant,
+              timestamp: new Date().toISOString()
+            }));
+            
+            uniqueChats.push({
+              id: Date.now() - (index * 1000),
+              threadId,
+              title: messages[0]?.content?.slice(0, 100) || 'Chat',
+              messages
+            });
           }
         }
       });
@@ -90,19 +75,26 @@ function GlobalChats() {
   const deleteAllChats = async () => {
     try {
       setIsDeleting(true);
-      if (!import.meta.env.VITE_DATABASE_URL) {
-        throw new Error('Database URL is not defined in environment variables');
-      }
-      const sql = neon(import.meta.env.VITE_DATABASE_URL);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      await sql`TRUNCATE TABLE checkpoints`;
+      // Delete all chats one by one
+      for (const chat of chats) {
+        await fetch(`${apiUrl}/messages`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            thread_id: chat.threadId
+          })
+        });
+      }
       
       setChats([]);
       setSelectedChat(null);
       setShowDeleteConfirm(false);
     } catch (error) {
-      console.error('Error deleting chats:', error);
-      alert('Failed to delete chats. Please try again.');
+      console.error('Error deleting all chats:', error);
     } finally {
       setIsDeleting(false);
     }
@@ -111,15 +103,17 @@ function GlobalChats() {
   const deleteChat = async (chat: Chat) => {
     try {
       setIsDeletingIndividual(true);
-      if (!import.meta.env.VITE_DATABASE_URL) {
-        throw new Error('Database URL is not defined in environment variables');
-      }
-      const sql = neon(import.meta.env.VITE_DATABASE_URL);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      await sql`
-        DELETE FROM checkpoints 
-        WHERE metadata->>'thread_id' = ${chat.threadId}
-      `;
+      await fetch(`${apiUrl}/messages`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          thread_id: chat.threadId
+        })
+      });
       
       setChats(prevChats => prevChats.filter(c => c.id !== chat.id));
       if (selectedChat?.id === chat.id) {

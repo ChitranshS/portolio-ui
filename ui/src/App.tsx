@@ -7,7 +7,6 @@ import { PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Chat, Message, MessageRole, StreamMessage, DBQueryResult, convertDBMessagesToChat } from './types';
 // import ProfileModal from './components/ProfileModal';
 import { v4 as uuidv4 } from 'uuid';
-import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv'
 // import { BackgroundBeams } from "@/components/ui/background-beams";
 import { threadStorage } from './lib/threadStorage';
@@ -24,108 +23,71 @@ function MainApp() {
 
   const fetchMessagesFromDB = async () => {
     try {
-      if (!import.meta.env.VITE_DATABASE_URL) {
-        throw new Error('Database URL is not defined in environment variables');
-      }
-      const sql = neon(import.meta.env.VITE_DATABASE_URL);
+      setIsLoading(true);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
+      let requestBody = {};
       const threadId = currentChat?.threadId;
-      let posts;
-  
+      
       if (threadId) {
-        // If we have a current chat, get its latest state
-        posts = await sql`
-          WITH LastSteps AS (
-            SELECT 
-              metadata->>'thread_id' as thread_id, 
-              MAX((metadata->>'step')::integer) as max_step
-            FROM checkpoints
-            WHERE metadata->>'thread_id' = ${threadId}
-            GROUP BY metadata->>'thread_id'
-          )
-          SELECT 
-            metadata -> 'writes' as query,
-            metadata->>'thread_id' as thread_id
-          FROM checkpoints c
-          INNER JOIN LastSteps ls 
-            ON c.metadata->>'thread_id' = ls.thread_id 
-            AND (c.metadata->>'step')::integer = ls.max_step
-        `;
+        // If we have a current chat, get its messages
+        requestBody = {
+          thread_ids: [threadId],
+          is_global: false
+        };
       } else {
         // For global view or when no stored thread IDs
         if (isGlobalView) {
-          posts = await sql`
-            WITH LastSteps AS (
-              SELECT 
-                metadata->>'thread_id' as thread_id, 
-                MAX((metadata->>'step')::integer) as max_step
-              FROM checkpoints
-              GROUP BY metadata->>'thread_id'
-            )
-            SELECT 
-              metadata -> 'writes' as query,
-              metadata->>'thread_id' as thread_id
-            FROM checkpoints c
-            INNER JOIN LastSteps ls 
-              ON c.metadata->>'thread_id' = ls.thread_id 
-              AND (c.metadata->>'step')::integer = ls.max_step
-            ORDER BY ls.max_step DESC
-            LIMIT 100
-          `;
+          requestBody = {
+            is_global: true
+          };
         } else {
           // For personal view with stored thread IDs
           const storedThreadIds = threadStorage.getThreadIds();
           if (storedThreadIds.length === 0) {
-            posts = [];
-          } else {
-            posts = await sql`
-              WITH LastSteps AS (
-                SELECT 
-                  metadata->>'thread_id' as thread_id, 
-                  MAX((metadata->>'step')::integer) as max_step
-                FROM checkpoints
-                WHERE metadata->>'thread_id' = ANY(${storedThreadIds}::text[])
-                GROUP BY metadata->>'thread_id'
-              )
-              SELECT 
-                metadata -> 'writes' as query,
-                metadata->>'thread_id' as thread_id
-              FROM checkpoints c
-              INNER JOIN LastSteps ls 
-                ON c.metadata->>'thread_id' = ls.thread_id 
-                AND (c.metadata->>'step')::integer = ls.max_step
-              ORDER BY ls.max_step DESC
-            `;
+            setChats([]);
+            setIsLoading(false);
+            return;
           }
+          requestBody = {
+            thread_ids: storedThreadIds,
+            is_global: false
+          };
         }
       }
+
+      const response = await fetch(`${apiUrl}/get_messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const posts = data.messages;
   
       const seenMessages = new Set();
       const uniqueChats: Chat[] = [];
   
-      posts.forEach((post, index) => {
+      posts.forEach((post: any) => {
         if (post?.query?.model?.messages) {
           const dbMessages = post.query.model.messages;
           const threadId = post.thread_id;
 
-          // Skip messages that are ping requests
-          const isPingRequest = dbMessages.some(msg => 
-            msg.kwargs.content.trim() === "Respond with OKAY only" || 
-            threadId === "pinging_123"
-          );
-          
-          if (!isPingRequest) {
-            const chatHash = JSON.stringify(dbMessages.map(msg => ({
-              content: msg.kwargs.content.trim(),
-              type: msg.kwargs.type
-            })));
-    
-            if (!seenMessages.has(chatHash)) {
-              seenMessages.add(chatHash);
-              // Pass threadId to the conversion function
-              const newChat = convertDBMessagesToChat(dbMessages, index, threadId);
-              uniqueChats.push(newChat);
-            }
+          const chatHash = JSON.stringify(dbMessages.map((msg: any) => ({
+            content: msg.kwargs.content.trim(),
+            type: msg.kwargs.type
+          })));
+  
+          if (!seenMessages.has(chatHash)) {
+            seenMessages.add(chatHash);
+            const newChat = convertDBMessagesToChat(dbMessages, uniqueChats.length, threadId);
+            uniqueChats.push(newChat);
           }
         }
       });
@@ -141,138 +103,33 @@ function MainApp() {
 
   const deleteFromDB = async (threadId: string) => {
     try {
-      if (!import.meta.env.VITE_DATABASE_URL) {
-        throw new Error('Database URL is not defined in environment variables');
-      }
-      const sql = neon(import.meta.env.VITE_DATABASE_URL);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      // Delete from multiple tables
-      await sql`
-        DELETE FROM checkpoints 
-        WHERE metadata->>'thread_id' = ${threadId};
-      `;
-  
-      await sql`
-        DELETE FROM checkpoint_blobs 
-        WHERE thread_id = ${threadId};
-      `;
-  
-      await sql`
-        DELETE FROM checkpoint_writes 
-        WHERE thread_id = ${threadId};
-      `;
-  
+      const response = await fetch(`${apiUrl}/messages`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ thread_id: threadId })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Remove from local storage
+      threadStorage.removeThreadId(threadId);
+      
+      // Refresh messages
+      await fetchMessagesFromDB();
     } catch (error) {
       console.error('Error deleting from database:', error);
       throw error;
     }
   };
 
-  // Function to check if enough time has passed since last reload
-  const shouldSendRandomRequests = (): boolean => {
-    const isFirstVisit = localStorage.getItem('hasVisited') === null;
-  
-    // First time website visit - send 5 requests
-    if (isFirstVisit) {
-      localStorage.setItem('hasVisited', 'true');
-      return true;
-    }
-
-    const lastMessageTime = localStorage.getItem('lastMessageTime');
-    // If no messages yet, don't send requests
-    if (!lastMessageTime) {
-      console.log('⏳ Waiting for first message before sending random requests');
-      return false;
-    }
-
-    // Check if 4 minutes have passed since last message
-    const currentTime = Date.now();
-    const fourMinutesInMs = 4 * 60 * 1000; // 4 minutes in milliseconds
-    const timeSinceLastMessage = currentTime - parseInt(lastMessageTime);
-
-    if (timeSinceLastMessage >= fourMinutesInMs) {
-      return true;
-    }
-
-    console.log('⏳ Skipping random requests', {
-      lastMessage: new Date(parseInt(lastMessageTime)).toLocaleString(),
-      timeUntilNextEligible: `${((fourMinutesInMs - timeSinceLastMessage) / 1000 / 60).toFixed(2)} minutes`
-    });
-    return false;
-  };
-
-  // Function to send random requests
-  const sendRandomRequests = async () => {
-    const sharedThreadId = 'pinging_123';
-    console.log('%c📡 Starting Random Requests Sequence', 'color: #4b0082; font-size: 14px; border-radius: 5px;');
-    console.log({
-      threadId: sharedThreadId,
-      totalRequests: 3,
-      startTime: new Date().toLocaleString()
-    });
-    
-    for (let i = 0; i < 3; i++) {
-      const requestId = uuidv4();
-      console.log('%c🔄 Request ' + (i + 1) + '/3', 'color: #ffa500; font-weight: bold;', {
-        requestId,
-        threadId: sharedThreadId,
-        timestamp: new Date().toLocaleString()
-      });
-      
-      try {
-        // const response = await fetch('http://localhost:8000/chat', {
-        const response = await fetch('https://resume-api-242842293866.asia-south1.run.app/chat', {
-        method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          mode: 'cors',
-          credentials: 'omit',
-          body: JSON.stringify({
-            query: "Respond with OKAY only",
-            id: requestId,
-            threadId: sharedThreadId
-          }),
-        });
-        
-        const data = await response.json();
-        console.log('%c✅ Request ' + (i + 1) + ' Successful', 'color: #00ff00; font-weight: bold;', { 
-          status: response.status,
-          response: data,
-          requestId,
-          threadId: sharedThreadId,
-          timestamp: new Date().toLocaleString()
-        });
-      } catch (error) {
-        console.log('%c❌ Request ' + (i + 1) + ' Failed', 'color: #ff0000; font-weight: bold;', {
-          error,
-          requestId,
-          threadId: sharedThreadId,
-          timestamp: new Date().toLocaleString()
-        });
-      }
-      
-      // Add a small delay between requests
-      if (i < 4) { // Don't wait after the last request
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-    }
-    
-    console.log('%c🎉 Random Requests Sequence Completed', 'color: #4b0082; font-size: 14px;border-radius: 5px;',);
-    console.log({
-      threadId: sharedThreadId,
-      completionTime: new Date().toLocaleString(),
-      status: 'All requests completed'
-    });
-  };
-
   useEffect(() => {
     fetchMessagesFromDB();
-    if (shouldSendRandomRequests()) {
-      console.log('%c⚡ Sending 3 Random Requests ⚡', 'color: #ffa500; font-size: 14px; border-radius: 5px;');
-      sendRandomRequests();
-    }
   }, []);
 
   const handleSendMessage = async (message: string, chatToUse?: Chat) => {

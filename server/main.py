@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware  # Add this import
 from dotenv import load_dotenv
 import os
 from rag.logic import query_handler
-from utils.postgres import connection_pool, get_connection, return_connection, cleanup_pool
+from utils.postgres import connection_pool, get_connection, return_connection, startup_event , cleanup_pool
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from utils.postgres import startup_event , cleanup_pool
@@ -118,6 +118,8 @@ async def get_messages(request: Request):
         data = await request.json()
         thread_ids = data.get('thread_ids', [])
         is_global = data.get('is_global', False)
+        
+        logger.info(f"Fetching messages with params: thread_ids={thread_ids}, is_global={is_global}")
 
         conn = get_connection(connection_pool)
         try:
@@ -144,6 +146,7 @@ async def get_messages(request: Request):
                 with conn.cursor() as cur:
                     cur.execute(query, (thread_ids,))
                     result = cur.fetchall()
+                    logger.info(f"Found {len(result)} messages for specific threads")
             else:
                 # For global view
                 if is_global:
@@ -156,28 +159,35 @@ async def get_messages(request: Request):
                             GROUP BY metadata->>'thread_id'
                         )
                         SELECT 
-                            metadata -> 'writes' as query,
-                            metadata->>'thread_id' as thread_id
+                            c.metadata -> 'writes' as query,
+                            c.metadata->>'thread_id' as thread_id
                         FROM checkpoints c
                         INNER JOIN LastSteps ls 
                             ON c.metadata->>'thread_id' = ls.thread_id 
                             AND (c.metadata->>'step')::integer = ls.max_step
+                        WHERE c.metadata -> 'writes' -> 'model' -> 'messages' IS NOT NULL
                         ORDER BY ls.max_step DESC
                         LIMIT 100
                     """
                     with conn.cursor() as cur:
                         cur.execute(query)
                         result = cur.fetchall()
+                        logger.info(f"Found {len(result)} messages for global view")
                 else:
                     return {"messages": [], "status": "success"}
 
             # Convert result to list of dicts
             messages = []
             for row in result:
-                messages.append({
-                    "query": row[0],  # writes
-                    "thread_id": row[1]  # thread_id
-                })
+                try:
+                    messages.append({
+                        "query": row[0],  # writes
+                        "thread_id": row[1]  # thread_id
+                    })
+                except Exception as e:
+                    logger.error(f"Error processing row {row}: {str(e)}")
+
+            logger.info(f"Returning {len(messages)} messages")
             return {"messages": messages, "status": "success"}
 
         finally:
@@ -235,6 +245,51 @@ async def store_message(request: Request):
             detail={
                 "status": "error",
                 "message": "Failed to store message",
+                "error": str(e)
+            }
+        )
+
+@app.delete("/messages")
+async def delete_messages(request: Request):
+    try:
+        data = await request.json()
+        thread_id = data.get('thread_id')
+        
+        if not thread_id:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "status": "error",
+                    "message": "thread_id is required"
+                }
+            )
+
+        conn = get_connection(connection_pool)
+        try:
+            # Delete from checkpoints table
+            with conn.cursor() as cur:
+                query = """
+                    DELETE FROM checkpoints 
+                    WHERE metadata->>'thread_id' = %s
+                """
+                cur.execute(query, (thread_id,))
+                conn.commit()
+
+            return {
+                "status": "success",
+                "message": f"Successfully deleted messages for thread {thread_id}"
+            }
+
+        finally:
+            return_connection(connection_pool, conn)
+
+    except Exception as e:
+        logger.error(f"Error deleting messages: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "message": "Failed to delete messages",
                 "error": str(e)
             }
         )
